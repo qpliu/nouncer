@@ -1,0 +1,58 @@
+Nouncer is an Android application that announces times on entering
+and leaving specified locations along a route using text-to-speech.
+
+In the future, perhaps it could use the Strava API at
+http://strava.github.io/api/v3/segments/ to specify routes.
+
+Personally relevant use cases:
+
+ - Hill climb:
+   1. At bottom
+      - on exit, save start time and announce start time
+   2. At top
+      - on entry, if entering from bottom, announce time differential
+
+ - Loop with 2 intermediate points:
+   1. At start/end
+      - on entry, if entering from intermediate 2 on loop, announce
+        time differential
+      - on exit, save start time and announce start time (possibly suppress
+        the announcement if just finished a loop, but still save the
+        start time for a potential next loop)
+   2. At intermediates
+      - on entry, if on loop, announce time differential
+
+Implementation notes:
+
+Times are rounded to the nearest second.
+
+Entry and exit times are calculated by taking two points, one just inside
+and one just outside a given radius of the location, and linearly
+extrapolating to the point closest to the location (rounded to the nearest
+second).
+
+Google Play seems to require being online.  Need to be offline.  So
+Google Play Geofencing API is out.
+
+Have multiple LocationListeners:
+ - one with a long update time and distance that is always active, that
+   activates another that has a shorter update time and distance when
+   within a certain radius of any of the specified locations
+ - (optionally) one or more with a shorter update time and distance that
+   deactivates when not within a certain radius of any of the specified
+   locations, and activates another with an even smaller update time and
+   distance when within an even smaller radius
+ - one with the shortest update time and distance, which receives the
+   location updates used to actually calculate entry and exit times
+
+Main Activity:
+ Start/stop service
+ UI for specifying locations/routes/announcement text (initially not
+ implemented)
+ Show the latest entry/exit times
+
+Service:
+ on start: set up LocationListeners, initialize text-to-speech
+ on stop: remove LocationListeners, shutdown text-to-speech
+ Gather location updates to calculate entry/exit times
+ Gather entry/exit times to calculate and play announcements
