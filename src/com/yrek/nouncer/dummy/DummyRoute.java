@@ -21,6 +21,16 @@ class DummyRoute implements Route {
     }
 
     @Override
+    public int getRoutePointCount() {
+        return routePoints.length;
+    }
+
+    @Override
+    public RoutePoint getRoutePoint(int index) {
+        return routePoints[index];
+    }
+
+    @Override
     public List<RoutePoint> getRoutePoints() {
         ArrayList<RoutePoint> list = new ArrayList<RoutePoint>();
         for (DummyRoutePoint routePoint : routePoints) {

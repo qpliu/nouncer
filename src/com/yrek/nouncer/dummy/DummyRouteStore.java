@@ -21,6 +21,30 @@ class DummyRouteStore implements RouteStore {
             routes.add(JAMISON_CREEK);
         } else if (location.equals(DummyLocationStore.ALBA_1) || location.equals(DummyLocationStore.ALBA_2)) {
             routes.add(ALBA);
+        } else if (location.equals(DummyLocationStore.DOWNTOWN_1) || location.equals(DummyLocationStore.DOWNTOWN_2)) {
+            routes.add(DOWNTOWN_1);
+            routes.add(DOWNTOWN_2);
+        }
+        return routes;
+    }
+
+    @Override
+    public Collection<Route> getRoutesStartingAt(Location location) {
+        ArrayList<Route> routes = new ArrayList<Route>();
+        if (location.equals(DummyLocationStore.UCSC_LOOP_1)) {
+            routes.add(UCSC_LOOP);
+        } else if (location.equals(DummyLocationStore.BONNY_DOON_1)) {
+            routes.add(BONNY_DOON);
+        } else if (location.equals(DummyLocationStore.FELTON_EMPIRE_1)) {
+            routes.add(FELTON_EMPIRE);
+        } else if (location.equals(DummyLocationStore.JAMISON_CREEK_1)) {
+            routes.add(JAMISON_CREEK);
+        } else if (location.equals(DummyLocationStore.ALBA_1)) {
+            routes.add(ALBA);
+        } else if (location.equals(DummyLocationStore.DOWNTOWN_1)) {
+            routes.add(DOWNTOWN_1);
+        } else if (location.equals(DummyLocationStore.DOWNTOWN_2)) {
+            routes.add(DOWNTOWN_2);
         }
         return routes;
     }
@@ -54,4 +78,12 @@ class DummyRouteStore implements RouteStore {
         new DummyRoute("Alba",
                        new DummyRoutePoint(DummyLocationStore.ALBA_1, null, ANNOUNCE_START),
                        new DummyRoutePoint(DummyLocationStore.ALBA_2, ANNOUNCE_ARRIVE, null));
+    static final DummyRoute DOWNTOWN_1 =
+        new DummyRoute("Downtown 1",
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, null, ANNOUNCE_START),
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, ANNOUNCE_ARRIVE, null));
+    static final DummyRoute DOWNTOWN_2 =
+        new DummyRoute("Downtown 2",
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, null, ANNOUNCE_START),
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, ANNOUNCE_ARRIVE, null));
 }

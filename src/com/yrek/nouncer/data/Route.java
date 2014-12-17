@@ -4,5 +4,7 @@ import java.util.List;
 
 public interface Route {
     public String getName();
+    public int getRoutePointCount();
+    public RoutePoint getRoutePoint(int index);
     public List<RoutePoint> getRoutePoints();
 }
