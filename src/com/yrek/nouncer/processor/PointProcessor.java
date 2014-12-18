@@ -5,7 +5,7 @@ import com.yrek.nouncer.data.Point;
 
 import com.yrek.nouncer.store.LocationStore;
 
-public class PointProcessor {
+public class PointProcessor implements PointReceiver {
     private final LocationStore locationStore;
     private final Listener listener;
     private final double entryRadius;
@@ -24,9 +24,10 @@ public class PointProcessor {
         this.locationStore = locationStore;
         this.listener = listener;
         this.entryRadius = 20.0;
-        this.exitRadius = 50.0;
+        this.exitRadius = 40.0;
     }
 
+    @Override
     public void receivePoint(Point point) {
         if (proximateLocation != null) {
             double d = distance(point, proximateLocation);
