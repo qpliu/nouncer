@@ -16,11 +16,9 @@ class Announcer implements RouteProcessor.Listener {
     Announcer(Context context) {
         this.context = context;
         this.wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
-        this.wakeLock.setReferenceCounted(false);
     }
 
     public void start() {
-        wakeLock.acquire();
         synchronized (onInitListener) {
             if (textToSpeech != null) {
                 return;
@@ -31,7 +29,6 @@ class Announcer implements RouteProcessor.Listener {
     }
 
     public void stop() {
-        wakeLock.release();
         TextToSpeech tts;
         synchronized (onInitListener) {
             tts = textToSpeech;
@@ -84,6 +81,8 @@ class Announcer implements RouteProcessor.Listener {
         if (tts == null) {
             return;
         }
+        wakeLock.acquire();
         textToSpeech.speak(String.format(announcement, timestamp, (timestamp - startTime) / 60000L, ((timestamp - startTime) % 60000L) / 1000L), TextToSpeech.QUEUE_ADD, null);
+        wakeLock.release();
     }
 }

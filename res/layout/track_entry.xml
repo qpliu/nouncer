@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+   xmlns:android="http://schemas.android.com/apk/res/android"
+   android:orientation="vertical"
+   android:layout_width="fill_parent"
+   android:layout_height="wrap_content"
+   >
+  <TextView
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content"
+     android:id="@+id/location_text"
+     />
+  <LinearLayout
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content"
+     >
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Entry:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/entry_time"
+       android:textColor="#f00"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" Exit:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/exit_time"
+       android:textColor="#0f0"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" Stopped:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/time_stopped"
+       android:textColor="#800"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" Differential:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/time_differential"
+       android:textColor="#fff"
+     />
+  </LinearLayout>
+</LinearLayout>

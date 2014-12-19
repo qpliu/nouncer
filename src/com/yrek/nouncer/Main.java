@@ -7,27 +7,62 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Point;
 import com.yrek.nouncer.data.Route;
+import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
-import com.yrek.nouncer.store.TrackStore;
 
 public class Main extends Activity {
     private RouteProcessor.Listener routeListener;
     private PointProcessor.Listener locationListener;
     private PointReceiver pointListener;
-    private ServiceConnection serviceConnection;
-    private TrackStore trackStore;
+    private AnnouncerServiceConnection serviceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        final ArrayAdapter<TrackPoint> listAdapter = new ArrayAdapter<TrackPoint>(this, R.layout.track_entry) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = Main.this.getLayoutInflater().inflate(R.layout.track_entry, parent, false);
+                }
+                TrackPoint trackPoint = getItem(position);
+                ((TextView) convertView.findViewById(R.id.location_text)).setText(trackPoint.getLocation().getName());
+                ((TextView) convertView.findViewById(R.id.entry_time)).setText(String.format("%tT", trackPoint.getEntryTime()));
+                ((TextView) convertView.findViewById(R.id.exit_time)).setText(String.format("%tT", trackPoint.getExitTime()));
+                long dt = trackPoint.getExitTime() - trackPoint.getEntryTime();
+                if (dt <= 0) {
+                    ((TextView) convertView.findViewById(R.id.time_stopped)).setText("");
+                } else {
+                    ((TextView) convertView.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
+                }
+                if (position == 0) {
+                    ((TextView) convertView.findViewById(R.id.time_differential)).setText("");
+                } else {
+                    TrackPoint lastPoint = getItem(position - 1);
+                    dt = lastPoint.getExitTime() - trackPoint.getEntryTime();
+                    if (dt <= 0) {
+                        ((TextView) convertView.findViewById(R.id.time_differential)).setText("");
+                    } else {
+                        ((TextView) convertView.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
+                    }
+                }
+                return convertView;
+            }
+        };
+        ((ListView) findViewById(R.id.track_list)).setAdapter(listAdapter);
 
         final TextView routeText = (TextView) findViewById(R.id.route_text);
         routeListener = new RouteProcessor.Listener() {
@@ -53,6 +88,8 @@ public class Main extends Activity {
                 locationText.post(new Runnable() {
                     @Override public void run() {
                         locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), timestamp));
+                        listAdapter.clear();
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
                     }
                 });
             }
@@ -60,6 +97,8 @@ public class Main extends Activity {
                 locationText.post(new Runnable() {
                     @Override public void run() {
                         locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), timestamp));
+                        listAdapter.clear();
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
                     }
                 });
             }
@@ -76,35 +115,23 @@ public class Main extends Activity {
             }
         };
         pointText.setText("Point: None");
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        startService(new Intent(this, AnnouncerService.class));
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        stopService(new Intent(this, AnnouncerService.class));
+        findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startService(new Intent(Main.this, AnnouncerService.class));
+            }
+        });
+        findViewById(R.id.stop_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                serviceConnection.announcerService.stop();
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        serviceConnection = new ServiceConnection() {
-            private AnnouncerService announcerService = null;
-            @Override public void onServiceConnected(ComponentName name, IBinder service) {
-                announcerService = ((AnnouncerService.LocalBinder) service).getService();
-                announcerService.setListeners(pointListener, locationListener, routeListener);
-                trackStore = announcerService.getTrackStore();
-            }
-            @Override public void onServiceDisconnected(ComponentName name) {
-                announcerService.setListeners(null, null, null);
-                trackStore = null;
-            }
-        };
+        serviceConnection = new AnnouncerServiceConnection();
         bindService(new Intent(this, AnnouncerService.class), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -112,5 +139,29 @@ public class Main extends Activity {
     protected void onPause() {
         super.onPause();
         unbindService(serviceConnection);
+    }
+
+    private class AnnouncerServiceConnection implements ServiceConnection {
+        AnnouncerService announcerService = null;
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            announcerService = ((AnnouncerService.LocalBinder) service).getService();
+            announcerService.setListeners(pointListener, locationListener, routeListener);
+            findViewById(R.id.track_list).post(new Runnable() {
+                @Override public void run() {
+                    long timestamp = System.currentTimeMillis();
+                    ArrayAdapter listAdapter = (ArrayAdapter) ((ListView) findViewById(R.id.track_list)).getAdapter();
+                    listAdapter.clear();
+                    listAdapter.addAll(announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
+                }
+            });
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            announcerService.setListeners(null, null, null);
+            announcerService = null;
+        }
     }
 }
