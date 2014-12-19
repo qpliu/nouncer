@@ -60,15 +60,15 @@ class Announcer implements RouteProcessor.Listener {
 
     @Override
     public void receiveEntry(Route route, long startTime, int routeIndex, long timestamp) {
-        announce(route.getRoutePoint(routeIndex).getEntryAnnouncement(), startTime, timestamp);
+        announce(route.getRoutePoint(routeIndex).getEntryAnnouncement(), startTime, timestamp, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
     }
 
     @Override
     public void receiveExit(Route route, long startTime, int routeIndex, long timestamp) {
-        announce(route.getRoutePoint(routeIndex).getExitAnnouncement(), startTime, timestamp);
+        announce(route.getRoutePoint(routeIndex).getExitAnnouncement(), startTime, timestamp, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
     }
 
-    private void announce(String announcement, long startTime, long timestamp) {
+    private void announce(String announcement, long startTime, long timestamp, String routeName, String locationName) {
         if (announcement == null) {
             return;
         }
@@ -82,7 +82,7 @@ class Announcer implements RouteProcessor.Listener {
             return;
         }
         wakeLock.acquire();
-        textToSpeech.speak(String.format(announcement, timestamp, (timestamp - startTime) / 60000L, ((timestamp - startTime) % 60000L) / 1000L), TextToSpeech.QUEUE_ADD, null);
+        textToSpeech.speak(String.format(announcement, timestamp, (timestamp - startTime) / 60000L, ((timestamp - startTime) % 60000L) / 1000L, routeName, locationName), TextToSpeech.QUEUE_ADD, null);
         wakeLock.release();
     }
 }
