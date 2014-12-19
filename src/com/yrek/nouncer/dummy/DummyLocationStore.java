@@ -27,6 +27,18 @@ class DummyLocationStore implements LocationStore {
         locations.add(ALBA_2);
         locations.add(DOWNTOWN_1);
         locations.add(DOWNTOWN_2);
+        locations.add(DOWNTOWN_3);
+        locations.add(DOWNTOWN_4);
+        locations.add(WESTSIDE_1);
+        locations.add(WESTSIDE_2);
+        locations.add(WESTSIDE_3);
+        locations.add(WESTSIDE_4);
+        locations.add(WESTSIDE_5);
+        locations.add(WESTSIDE_6);
+        locations.add(WESTSIDE_7);
+        locations.add(WESTSIDE_8);
+        locations.add(WESTSIDE_9);
+        locations.add(WESTSIDE_10);
         return locations;
     }
 
@@ -50,8 +62,10 @@ class DummyLocationStore implements LocationStore {
     static final DummyLocation ALBA_1 = new DummyLocation("Alba and Highway 9", 37.091851, -122.095929, 112.316864);
     static final DummyLocation ALBA_2 = new DummyLocation("Alba and Empire Grade", 37.104120, -122.140899, 737.313721);
 
-    static final DummyLocation DOWNTOWN_1 = new DummyLocation("Downtown 1", 36.973311, -122.025220, 3.220682);
-    static final DummyLocation DOWNTOWN_2 = new DummyLocation("Downtown 2", 36.973328, -122.027082, 4.666704);
+    static final DummyLocation DOWNTOWN_1 = new DummyLocation("Soquel Parking Garage", 36.973311, -122.025220, 3.220682);
+    static final DummyLocation DOWNTOWN_2 = new DummyLocation("Walnut and Cedar", 36.973328, -122.027082, 4.666704);
+    static final DummyLocation DOWNTOWN_3 = new DummyLocation("Front and Cooper", 36.975199, -122.025509, 3.986676);
+    static final DummyLocation DOWNTOWN_4 = new DummyLocation("Locust and Cedar", 36.975073, -122.027770, 5.656929);
 
     static final DummyLocation WESTSIDE_1 = new DummyLocation("Mission and Walnut", 36.972379, -122.035402, 23.326372);
     static final DummyLocation WESTSIDE_2 = new DummyLocation("Mission and Laurel", 36.969572, -122.037328, 23.101624);
@@ -60,4 +74,7 @@ class DummyLocationStore implements LocationStore {
     static final DummyLocation WESTSIDE_5 = new DummyLocation("Bay and Nobel", 36.974002, -122.050264, 73.71833);
     static final DummyLocation WESTSIDE_6 = new DummyLocation("Bay and Meder", 36.975326, -122.052847, 84.718033);
     static final DummyLocation WESTSIDE_7 = new DummyLocation("Bay and High", 36.977147, -122.053680, 91.497444);
+    static final DummyLocation WESTSIDE_8 = new DummyLocation("High and Moore", 36.977876, -122.047838, 85.971718);
+    static final DummyLocation WESTSIDE_9 = new DummyLocation("High and Laurent", 36.977703, -122.042535, 77.768517);
+    static final DummyLocation WESTSIDE_10 = new DummyLocation("High and Storey", 36.977511, -122.035402, 45.688763);
 }
