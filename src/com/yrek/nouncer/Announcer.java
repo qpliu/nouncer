@@ -1,6 +1,7 @@
 package com.yrek.nouncer;
 
 import android.content.Context;
+import android.os.PowerManager;
 import android.speech.tts.TextToSpeech;
 
 import com.yrek.nouncer.data.Route;
@@ -8,14 +9,18 @@ import com.yrek.nouncer.processor.RouteProcessor;
 
 class Announcer implements RouteProcessor.Listener {
     private final Context context;
+    private final PowerManager.WakeLock wakeLock;
     private TextToSpeech textToSpeech = null;
     private boolean initialized = false;
 
     Announcer(Context context) {
         this.context = context;
+        this.wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+        this.wakeLock.setReferenceCounted(false);
     }
 
     public void start() {
+        wakeLock.acquire();
         synchronized (onInitListener) {
             if (textToSpeech != null) {
                 return;
@@ -26,6 +31,7 @@ class Announcer implements RouteProcessor.Listener {
     }
 
     public void stop() {
+        wakeLock.release();
         TextToSpeech tts;
         synchronized (onInitListener) {
             tts = textToSpeech;

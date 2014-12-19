@@ -53,4 +53,11 @@ class DummyLocationStore implements LocationStore {
     static final DummyLocation DOWNTOWN_1 = new DummyLocation("Downtown 1", 36.973311, -122.025220, 3.220682);
     static final DummyLocation DOWNTOWN_2 = new DummyLocation("Downtown 2", 36.973328, -122.027082, 4.666704);
 
+    static final DummyLocation WESTSIDE_1 = new DummyLocation("Mission and Walnut", 36.972379, -122.035402, 23.326372);
+    static final DummyLocation WESTSIDE_2 = new DummyLocation("Mission and Laurel", 36.969572, -122.037328, 23.101624);
+    static final DummyLocation WESTSIDE_3 = new DummyLocation("Mission and Bay", 36.966750, -122.040329, 23.253344);
+    static final DummyLocation WESTSIDE_4 = new DummyLocation("Bay and King", 36.968205, -122.043027, 26.581438);
+    static final DummyLocation WESTSIDE_5 = new DummyLocation("Bay and Nobel", 36.974002, -122.050264, 73.71833);
+    static final DummyLocation WESTSIDE_6 = new DummyLocation("Bay and Meder", 36.975326, -122.052847, 84.718033);
+    static final DummyLocation WESTSIDE_7 = new DummyLocation("Bay and High", 36.977147, -122.053680, 91.497444);
 }

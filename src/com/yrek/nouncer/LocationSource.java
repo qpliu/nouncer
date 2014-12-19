@@ -57,9 +57,9 @@ class LocationSource {
     }
 
     private static final ListenerParameters[] LISTENER_PARAMETERS = new ListenerParameters[] {
-        new ListenerParameters(60000L, 500.0f, 500.0, 1000000.0),
-        new ListenerParameters(10000L,  50.0f,  50.0,     500.0),
-        new ListenerParameters( 2000L,   5.0f,   0.0,      50.0),
+        new ListenerParameters(60000L, 100.0f, 500.0, 1000000.0),
+        new ListenerParameters(10000L,  10.0f,  50.0,     500.0),
+        new ListenerParameters( 2000L,   1.0f,   0.0,      50.0),
     };
 
     private class Listener implements LocationListener {
@@ -81,8 +81,10 @@ class LocationSource {
                 child.stop();
             }
             assert child == null;
-            assert parent == null || parent.child == this;
-            parent.child = null;
+            if (parent != null) {
+                assert parent.child == this;
+                parent.child = null;
+            }
             ((LocationManager) context.getSystemService(Context.LOCATION_SERVICE)).removeUpdates(this);
         }
 

@@ -24,6 +24,20 @@ class DummyRouteStore implements RouteStore {
         } else if (location.equals(DummyLocationStore.DOWNTOWN_1) || location.equals(DummyLocationStore.DOWNTOWN_2)) {
             routes.add(DOWNTOWN_1);
             routes.add(DOWNTOWN_2);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_1)) {
+            routes.add(WESTSIDE_1);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_2)) {
+            routes.add(WESTSIDE_2);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_3)) {
+            routes.add(WESTSIDE_3);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_4)) {
+            routes.add(WESTSIDE_4);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_5)) {
+            routes.add(WESTSIDE_5);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_6)) {
+            routes.add(WESTSIDE_6);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_7)) {
+            routes.add(WESTSIDE_7);
         }
         return routes;
     }
@@ -45,12 +59,28 @@ class DummyRouteStore implements RouteStore {
             routes.add(DOWNTOWN_1);
         } else if (location.equals(DummyLocationStore.DOWNTOWN_2)) {
             routes.add(DOWNTOWN_2);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_1)) {
+            routes.add(WESTSIDE_1);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_2)) {
+            routes.add(WESTSIDE_2);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_3)) {
+            routes.add(WESTSIDE_3);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_4)) {
+            routes.add(WESTSIDE_4);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_5)) {
+            routes.add(WESTSIDE_5);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_6)) {
+            routes.add(WESTSIDE_6);
+        } else if (location.equals(DummyLocationStore.WESTSIDE_7)) {
+            routes.add(WESTSIDE_7);
         }
         return routes;
     }
 
     private static final String ANNOUNCE_START = "%1$tl:%1$tM";
-    private static final String ANNOUNCE_ARRIVE = "%2$d:%3$02d";
+    private static final String ANNOUNCE_ARRIVE = "%2$d minutes %3$02d seconds %2$d minutes %3$02d seconds %2$d minutes %3$02d seconds";
+    private static final String ANNOUNCE_ENTER = "Enter %1$tl:%1$tM";
+    private static final String ANNOUNCE_EXIT = "Exit %1$tl:%1$tM";
 
     static final DummyRoute UCSC_LOOP =
         new DummyRoute("UCSC Loop",
@@ -80,10 +110,17 @@ class DummyRouteStore implements RouteStore {
                        new DummyRoutePoint(DummyLocationStore.ALBA_2, ANNOUNCE_ARRIVE, null));
     static final DummyRoute DOWNTOWN_1 =
         new DummyRoute("Downtown 1",
-                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, null, ANNOUNCE_START),
-                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, ANNOUNCE_ARRIVE, null));
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, ANNOUNCE_ENTER, ANNOUNCE_START),
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, ANNOUNCE_ARRIVE, ANNOUNCE_EXIT));
     static final DummyRoute DOWNTOWN_2 =
         new DummyRoute("Downtown 2",
-                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, null, ANNOUNCE_START),
-                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, ANNOUNCE_ARRIVE, null));
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_2, ANNOUNCE_ENTER, ANNOUNCE_START),
+                       new DummyRoutePoint(DummyLocationStore.DOWNTOWN_1, ANNOUNCE_ARRIVE, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_1 = new DummyRoute("Westside 1", new DummyRoutePoint(DummyLocationStore.WESTSIDE_1, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_2 = new DummyRoute("Westside 2", new DummyRoutePoint(DummyLocationStore.WESTSIDE_2, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_3 = new DummyRoute("Westside 3", new DummyRoutePoint(DummyLocationStore.WESTSIDE_3, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_4 = new DummyRoute("Westside 4", new DummyRoutePoint(DummyLocationStore.WESTSIDE_4, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_5 = new DummyRoute("Westside 5", new DummyRoutePoint(DummyLocationStore.WESTSIDE_5, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_6 = new DummyRoute("Westside 6", new DummyRoutePoint(DummyLocationStore.WESTSIDE_6, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
+    static final DummyRoute WESTSIDE_7 = new DummyRoute("Westside 7", new DummyRoutePoint(DummyLocationStore.WESTSIDE_7, ANNOUNCE_ENTER, ANNOUNCE_EXIT));
 }
