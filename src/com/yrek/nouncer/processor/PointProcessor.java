@@ -117,4 +117,12 @@ public class PointProcessor implements PointReceiver {
     public static double distance(Point p, Location l) {
         return distance(p.getLatitude(), p.getLongitude(), l.getLatitude(), l.getLongitude());
     }
+
+    public static double dlat(double dist) {
+        return dist/R*180.0/Math.PI;
+    }
+
+    public static double dlon(double lat, double dist) {
+        return dist/(R*Math.cos(lat*Math.PI/180.0))*180.0/Math.PI;
+    }
 }

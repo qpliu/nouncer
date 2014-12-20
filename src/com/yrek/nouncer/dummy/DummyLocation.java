@@ -1,8 +1,5 @@
 package com.yrek.nouncer.dummy;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import com.yrek.nouncer.data.Location;
 
 class DummyLocation implements Location {
