@@ -42,22 +42,14 @@ public class Main extends Activity {
                 ((TextView) convertView.findViewById(R.id.location_text)).setText(trackPoint.getLocation().getName());
                 ((TextView) convertView.findViewById(R.id.entry_time)).setText(String.format("%tT", trackPoint.getEntryTime()));
                 ((TextView) convertView.findViewById(R.id.exit_time)).setText(String.format("%tT", trackPoint.getExitTime()));
-                long dt = trackPoint.getExitTime() - trackPoint.getEntryTime();
-                if (dt <= 0) {
-                    ((TextView) convertView.findViewById(R.id.time_stopped)).setText("");
-                } else {
-                    ((TextView) convertView.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
-                }
-                if (position == 0) {
+                long dt = Math.max(0L, trackPoint.getExitTime() - trackPoint.getEntryTime());
+                ((TextView) convertView.findViewById(R.id.time_stopped)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
+                if (position >= getCount() - 1) {
                     ((TextView) convertView.findViewById(R.id.time_differential)).setText("");
                 } else {
-                    TrackPoint lastPoint = getItem(position - 1);
-                    dt = lastPoint.getExitTime() - trackPoint.getEntryTime();
-                    if (dt <= 0) {
-                        ((TextView) convertView.findViewById(R.id.time_differential)).setText("");
-                    } else {
-                        ((TextView) convertView.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
-                    }
+                    TrackPoint lastPoint = getItem(position + 1);
+                    dt = Math.max(0L, trackPoint.getEntryTime() - lastPoint.getExitTime());
+                    ((TextView) convertView.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
                 }
                 return convertView;
             }
@@ -89,7 +81,7 @@ public class Main extends Activity {
                     @Override public void run() {
                         locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), timestamp));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
                     }
                 });
             }
@@ -98,7 +90,7 @@ public class Main extends Activity {
                     @Override public void run() {
                         locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), timestamp));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
                     }
                 });
             }
@@ -153,7 +145,7 @@ public class Main extends Activity {
                     long timestamp = System.currentTimeMillis();
                     ArrayAdapter listAdapter = (ArrayAdapter) ((ListView) findViewById(R.id.track_list)).getAdapter();
                     listAdapter.clear();
-                    listAdapter.addAll(announcerService.getTrackStore().getTrackPoints(timestamp - 1080000L, timestamp));
+                    listAdapter.addAll(announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
                 }
             });
         }

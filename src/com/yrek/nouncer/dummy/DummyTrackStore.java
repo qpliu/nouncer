@@ -11,20 +11,20 @@ class DummyTrackStore implements TrackStore {
     final ArrayList<DummyTrackPoint> track = new ArrayList<DummyTrackPoint>();
 
     @Override
-    public List<TrackPoint> getTrackPoints(long minTimestamp, long maxTimestamp) {
+    public List<TrackPoint> getTrackPoints(long minTimestamp, long maxTimestamp, int maxPoints) {
         ArrayList<TrackPoint> list = new ArrayList<TrackPoint>();
-        int i = 0;
+        int i = track.size() - 1;
         synchronized (track) {
-            while (i < track.size() && track.get(i).getExitTime() < minTimestamp) {
-                i++;
+            while (i >= 0 && track.get(i).getEntryTime() > maxTimestamp) {
+                i--;
             }
-            while (i < track.size()) {
+            while (i >= 0 && (maxPoints <= 0 || list.size() < maxPoints)) {
                 DummyTrackPoint point = track.get(i);
-                if (point.getEntryTime() > maxTimestamp) {
+                if (point.getExitTime() < minTimestamp) {
                     break;
                 }
                 list.add(point);
-                i++;
+                i--;
             }
         }
         return list;

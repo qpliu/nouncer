@@ -46,18 +46,18 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/time_stopped"
-       android:textColor="#800"
+       android:textColor="#aaf"
      />
     <TextView
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:text=" Differential:"
+       android:text=" Diff:"
      />
     <TextView
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/time_differential"
-       android:textColor="#fff"
+       android:textColor="#ffa"
      />
   </LinearLayout>
 </LinearLayout>
