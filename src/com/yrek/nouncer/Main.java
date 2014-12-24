@@ -58,17 +58,17 @@ public class Main extends Activity {
 
         final TextView routeText = (TextView) findViewById(R.id.route_text);
         routeListener = new RouteProcessor.Listener() {
-            @Override public void receiveEntry(final Route route, final long startTime, final int routeIndex, final long timestamp) {
+            @Override public void receiveEntry(final Route route, final long startTime, final int routeIndex, final long entryTime) {
                 routeText.post(new Runnable() {
                     @Override public void run() {
-                        routeText.setText(String.format("Entry: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), timestamp, (timestamp - startTime) / 60000L, (timestamp - startTime) % 60000L / 1000L));
+                        routeText.setText(String.format("Entry: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), entryTime, (entryTime - startTime) / 60000L, (entryTime - startTime) % 60000L / 1000L));
                     }
                 });
             }
-            @Override public void receiveExit(final Route route, final long startTime, final int routeIndex, final long timestamp) {
+            @Override public void receiveExit(final Route route, final long startTime, final int routeIndex, final long exitTime) {
                 routeText.post(new Runnable() {
                     @Override public void run() {
-                        routeText.setText(String.format("Exit: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), timestamp, (timestamp - startTime) / 60000L, (timestamp - startTime) % 60000L / 1000L));
+                        routeText.setText(String.format("Exit: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), exitTime, (exitTime - startTime) / 60000L, (exitTime - startTime) % 60000L / 1000L));
                     }
                 });
             }
@@ -76,21 +76,21 @@ public class Main extends Activity {
 
         final TextView locationText = (TextView) findViewById(R.id.location_text);
         locationListener = new PointProcessor.Listener() {
-            @Override public void receiveEntry(final Location location, final long timestamp) {
+            @Override public void receiveEntry(final Location location, final long entryTime, final long timestamp) {
                 locationText.post(new Runnable() {
                     @Override public void run() {
-                        locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), timestamp));
+                        locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), entryTime));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, Math.max(timestamp, entryTime), 20));
                     }
                 });
             }
-            @Override public void receiveExit(final Location location, final long timestamp) {
+            @Override public void receiveExit(final Location location, final long exitTime, final long timestamp) {
                 locationText.post(new Runnable() {
                     @Override public void run() {
-                        locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), timestamp));
+                        locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), exitTime));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, Math.max(timestamp, exitTime), 20));
                     }
                 });
             }

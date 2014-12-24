@@ -59,13 +59,13 @@ class Announcer implements RouteProcessor.Listener {
     };
 
     @Override
-    public void receiveEntry(Route route, long startTime, int routeIndex, long timestamp) {
-        announce(route.getRoutePoint(routeIndex).getEntryAnnouncement(), startTime, timestamp, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
+    public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime) {
+        announce(route.getRoutePoint(routeIndex).getEntryAnnouncement(), startTime, entryTime, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
     }
 
     @Override
-    public void receiveExit(Route route, long startTime, int routeIndex, long timestamp) {
-        announce(route.getRoutePoint(routeIndex).getExitAnnouncement(), startTime, timestamp, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
+    public void receiveExit(Route route, long startTime, int routeIndex, long exitTime) {
+        announce(route.getRoutePoint(routeIndex).getExitAnnouncement(), startTime, exitTime, route.getName(), route.getRoutePoint(routeIndex).getLocation().getName());
     }
 
     private void announce(String announcement, long startTime, long timestamp, String routeName, String locationName) {

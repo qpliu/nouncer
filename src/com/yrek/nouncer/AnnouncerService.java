@@ -66,44 +66,44 @@ public class AnnouncerService extends Service {
         }
         if (locationSource == null) {
             final RouteProcessor routeProcessor = new RouteProcessor(store.getRouteStore(), store.getTrackStore(), new RouteProcessor.Listener() {
-                @Override public void receiveEntry(final Route route, final long startTime, final int routeIndex, final long timestamp) {
+                @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime) {
                     
-                    announcer.receiveEntry(route, startTime, routeIndex, timestamp);
+                    announcer.receiveEntry(route, startTime, routeIndex, entryTime);
                     RouteProcessor.Listener listener = routeListener;
                     if (listener != null) {
-                        listener.receiveEntry(route, startTime, routeIndex, timestamp);
+                        listener.receiveEntry(route, startTime, routeIndex, entryTime);
                     }
                 }
-                @Override public void receiveExit(final Route route, final long startTime, final int routeIndex, final long timestamp) {
-                    announcer.receiveExit(route, startTime, routeIndex, timestamp);
+                @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime) {
+                    announcer.receiveExit(route, startTime, routeIndex, exitTime);
                     RouteProcessor.Listener listener = routeListener;
                     if (listener != null) {
-                        listener.receiveExit(route, startTime, routeIndex, timestamp);
+                        listener.receiveExit(route, startTime, routeIndex, exitTime);
                     }
                 }
             });
 
             final PointProcessor pointProcessor = new PointProcessor(store.getLocationStore(), new PointProcessor.Listener() {
-                @Override public void receiveEntry(final Location location, final long timestamp) {
-                    store.getTrackStore().addEntry(location, timestamp);
-                    routeProcessor.receiveEntry(location, timestamp);
+                @Override public void receiveEntry(Location location, long entryTime, long timestamp) {
+                    store.getTrackStore().addEntry(location, entryTime, timestamp);
+                    routeProcessor.receiveEntry(location, entryTime, timestamp);
                     PointProcessor.Listener listener = locationListener;
                     if (listener != null) {
-                        listener.receiveEntry(location, timestamp);
+                        listener.receiveEntry(location, entryTime, timestamp);
                     }
                 }
-                @Override public void receiveExit(final Location location, final long timestamp) {
-                    store.getTrackStore().addExit(location, timestamp);
-                    routeProcessor.receiveExit(location, timestamp);
+                @Override public void receiveExit(Location location, long exitTime, long timestamp) {
+                    store.getTrackStore().addExit(location, exitTime, timestamp);
+                    routeProcessor.receiveExit(location, exitTime, timestamp);
                     PointProcessor.Listener listener = locationListener;
                     if (listener != null) {
-                        listener.receiveExit(location, timestamp);
+                        listener.receiveExit(location, exitTime, timestamp);
                     }
                 }
             });
 
             locationSource = new LocationSource(this, store.getLocationStore(), new PointReceiver() {
-                @Override public void receivePoint(final Point point) {
+                @Override public void receivePoint(Point point) {
                     try {
                         store.getPointStore().addPoint(point);
                         pointProcessor.receivePoint(point);

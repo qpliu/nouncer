@@ -61,18 +61,18 @@ public class RouteProcessor implements PointProcessor.Listener {
     }
 
     @Override
-    public void receiveEntry(Location location, long timestamp) {
-        process(location, timestamp, true);
+    public void receiveEntry(Location location, long entryTime, long timestamp) {
+        process(location, entryTime, true);
     }
 
     @Override
-    public void receiveExit(Location location, long timestamp) {
-        process(location, timestamp, false);
+    public void receiveExit(Location location, long exitTime, long timestamp) {
+        process(location, exitTime, false);
     }
 
     public interface Listener {
-        public void receiveEntry(Route route, long startTime, int routeIndex, long timestamp);
-        public void receiveExit(Route route, long startTime, int routeIndex, long timestamp);
+        public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime);
+        public void receiveExit(Route route, long startTime, int routeIndex, long exitTime);
     }
 
     private class PendingRoute {

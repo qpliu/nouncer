@@ -33,14 +33,14 @@ public class PointProcessor implements PointReceiver {
             double d = distance(point, proximateLocation);
             if (d >= exitRadius) {
                 if (lastDistance < exitRadius && entered) {
-                    listener.receiveExit(proximateLocation, extrapolateTime(point, lastPoint, proximateLocation));
+                    listener.receiveExit(proximateLocation, extrapolateTime(point, lastPoint, proximateLocation), point.getTime());
                 }
                 proximateLocation = null;
                 entered = false;
             } else {
                 if (d < entryRadius && lastDistance >= entryRadius && !entered) {
                     entered = true;
-                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation));
+                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), point.getTime());
                 }
                 lastPoint = point;
                 lastDistance = d;
@@ -58,12 +58,12 @@ public class PointProcessor implements PointReceiver {
         if (lastDistance < entryRadius) {
             if (lastPoint == null && !entered) {
                 entered = true;
-                listener.receiveEntry(proximateLocation, point.getTime());
+                listener.receiveEntry(proximateLocation, point.getTime(), point.getTime());
             } else {
                 double d = distance(lastPoint, proximateLocation);
                 if (d > lastDistance && !entered) {
                     entered = true;
-                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation));
+                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), point.getTime());
                 }
             }
         }
@@ -71,8 +71,8 @@ public class PointProcessor implements PointReceiver {
     }
 
     public interface Listener {
-        public void receiveEntry(Location location, long timestamp);
-        public void receiveExit(Location location, long timestamp);
+        public void receiveEntry(Location location, long entryTime, long timestamp);
+        public void receiveExit(Location location, long exitTime, long timestamp);
     }
 
     // p2 must be closer to location than p1

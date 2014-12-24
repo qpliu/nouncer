@@ -37,8 +37,10 @@ type Point struct {
 
 type Track struct {
 	Location
-	Entry time.Time
-	Exit  time.Time
+	Entry          time.Time
+	Exit           time.Time
+	EntryTimestamp time.Time
+	ExitTimestamp  time.Time
 }
 
 func GetLocation(rows *sql.Rows) *Location {
@@ -61,12 +63,14 @@ func GetPoint(rows *sql.Rows) *Point {
 
 func GetTrack(rows *sql.Rows) *Track {
 	t := &Track{}
-	var entry, exit int64
-	if err := rows.Scan(&t.Id, &t.Name, &t.Lat, &t.Lon, &t.Elev, &entry, &exit); err != nil {
+	var entry, exit, entryTimestamp, exitTimestamp int64
+	if err := rows.Scan(&t.Id, &t.Name, &t.Lat, &t.Lon, &t.Elev, &entry, &exit, &entryTimestamp, &exitTimestamp); err != nil {
 		panic(err)
 	}
 	t.Entry = time.Unix(entry/1000, (entry%1000)*10000000)
 	t.Exit = time.Unix(exit/1000, (exit%1000)*10000000)
+	t.EntryTimestamp = time.Unix(entryTimestamp/1000, (entryTimestamp%1000)*10000000)
+	t.ExitTimestamp = time.Unix(exitTimestamp/1000, (exitTimestamp%1000)*10000000)
 	return t
 }
 
@@ -129,7 +133,7 @@ func main() {
 		panic(err)
 	}
 	defer points.Close()
-	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time) FROM location, track WHERE location.id = location_id ORDER BY track.id ASC")
+	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time), entry_timestamp, coalesce(exit_timestamp,entry_timestamp) FROM location, track WHERE location.id = location_id ORDER BY track.id ASC")
 	if err != nil {
 		panic(err)
 	}
@@ -152,11 +156,11 @@ func main() {
 		printPoint := p != nil
 		if t != nil {
 			if !entered && (p == nil || p.Time.After(t.Entry)) {
-				fmt.Printf("%s ENTER: %s\n", t.Entry.Format("15:04:05"), t.Name)
+				fmt.Printf("%s ENTER: %s (timestamp:%s)\n", t.Entry.Format("15:04:05"), t.Name, t.EntryTimestamp.Format("15:04:05"))
 				entered = true
 			}
 			if entered && (p == nil || p.Time.After(t.Exit)) {
-				fmt.Printf("%s EXIT: %s\n", t.Exit.Format("15:04:05"), t.Name)
+				fmt.Printf("%s EXIT: %s (timestamp:%s)\n", t.Exit.Format("15:04:05"), t.Name, t.ExitTimestamp.Format("15:04:05"))
 				t = nil
 				printPoint = false
 			}
