@@ -77,9 +77,10 @@ public class PointProcessor implements PointReceiver {
 
     // p2 must be closer to location than p1
     private static long extrapolateTime(Point p1, Point p2, Location location) {
-        double dlat = 1000.0*(p2.getLatitude() - p1.getLatitude()) / (double) (p2.getTime() - p1.getTime());
-        double dlon = 1000.0*(p2.getLongitude() - p1.getLongitude()) / (double) (p2.getTime() - p1.getTime());
-        long dt = 0;
+        long dt = p2.getTime() > p1.getTime() ? 1000L : -1000L;
+        double dlat = (p2.getLatitude() - p1.getLatitude()) / (double) (p2.getTime() - p1.getTime()) * ((double) dt);
+        double dlon = (p2.getLongitude() - p1.getLongitude()) / (double) (p2.getTime() - p1.getTime()) * ((double) dt);
+        long t = p1.getTime();
         // also interpolate in case location is between p1 and p2
         double lat = p1.getLatitude();
         double lon = p1.getLongitude();
@@ -89,14 +90,10 @@ public class PointProcessor implements PointReceiver {
             lon += dlon;
             double d = distance(lat, lon, location.getLatitude(), location.getLongitude());
             if (d > dist) {
-                if (p2.getTime() > p1.getTime()) {
-                    return p1.getTime() + 1000L*dt;
-                } else {
-                    return p1.getTime() - 1000L*dt;
-                }
+                return t;
             }
             dist = d;
-            dt++;
+            t += dt;
         }
     }
 
