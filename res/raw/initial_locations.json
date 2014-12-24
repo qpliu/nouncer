@@ -1,0 +1,53 @@
+[["UCSC Loop Start/End", 36.982162, -122.051004, 119.59938],
+ ["UCSC Loop Mid-Climb", 36.991019, -122.054622, 181.817093],
+ ["UCSC Loop Top of Climb", 36.998778, -122.054929, 228.564636],
+
+ ["Highway 1 and Western", 36.960894, -122.056684, 29.490145],
+ ["Highway 1 and Bonny Doon", 37.001067, -122.180379, 16.867546],
+ ["Davenport", 37.011356, -122.195421, 27.243507],
+ ["Highway 1 and Swanton (south)", 37.028601, -122.216411, 31.833126],
+ ["Highway 1 and Swanton (north)", 37.084368, -122.268214, 42.073792],
+
+ ["Bonny Doon and Smith Grade", 37.036684, -122.151924, 369.194885],
+ ["Bonny Doon and Pine Flat", 37.042163, -122.150826, 384.891663],
+ ["Pine Flat and Ice Cream Grade", 37.062808, -122.147769, 518.930603],
+ ["Pine Flat and Bonny Doon", 37.064184, -122.145301, 541.006714],
+
+ ["Swanton and Last Chance", 37.082727, -122.258705, 156.83931],
+
+ ["Highway 9 and Encinal", 36.986684, -122.030286, 8.850394],
+ ["Felton: Highway 9 and Felton-Empire", 37.053088, -122.073297, 87.963921],
+ ["Highway 9 and Glen Arbor", 37.074252, -122.084477, 100.640472],
+ ["Ben Lomond: Highway 9 and Glen Arbor", 37.088784, -122.088442, 92.869507],
+ ["Highway 9 and Alba", 37.091851, -122.095929, 112.316864],
+ ["Brookdale", 37.107749, -122.109703, 139.974045],
+ ["Boulder Creek: Hwy 9 and Hwy 236", 37.125363, -122.122332, 149.869446],
+ ["Waterman Gap: Hwy 9 and Hwy 236", 37.211582, -122.156702, 386.991058],
+ ["Saratoga Gap: Hwy 9 and Skyline", 37.258526, -122.121973, 803.074951],
+
+ ["Glen Arbor and Quail Hollow", 37.079163, -122.077823, 105.231056],
+
+ ["Empire Grade and Jamison Creek", 37.141938, -122.187120, 698.49176],
+ ["Empire Grade and Alba", 37.104120, -122.140899, 737.313721],
+ ["Empire Grade and Pine Flat", 37.078366, -122.133481, 662.273438],
+ ["Empire Grade and Felton-Empire", 37.057959, -122.123125, 553.639099],
+ ["Empire Grade and Chinquapin", 37.017725, -122.079357, 344.581207],
+ ["Empire Grade and Heller", 36.987838, -122.068723, 163.082306],
+
+ ["Highway 236 and Jamison Creek", 37.146201, -122.157896, 239.443588],
+
+ ["Mission and Walnut", 36.972379, -122.035402, 23.326372],
+ ["Mission and Laurel", 36.969572, -122.037328, 23.101624],
+ ["Mission and Bay", 36.966750, -122.040329, 23.253344],
+ ["Bay and King", 36.968205, -122.043027, 26.581438],
+ ["Bay and Nobel", 36.974002, -122.050264, 73.71833],
+ ["Bay and Meder", 36.975326, -122.052847, 84.718033],
+ ["Bay and High", 36.977147, -122.053680, 91.497444],
+ ["High and Moore", 36.977876, -122.047838, 85.971718],
+ ["High and Laurent", 36.977703, -122.042535, 77.768517],
+ ["High and Storey", 36.977511, -122.035402, 45.688763],
+
+ ["Walnut and Cedar", 36.973328, -122.027082, 4.666704],
+ ["Front and Cooper", 36.975199, -122.025509, 3.986676],
+ ["Locust and Cedar", 36.975073, -122.027770, 5.656929],
+ ["Soquel Parking Garage", 36.973311, -122.025220, 3.220682]]
