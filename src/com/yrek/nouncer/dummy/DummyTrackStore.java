@@ -44,7 +44,7 @@ class DummyTrackStore implements TrackStore {
     }
 
     @Override
-        public boolean addExit(Location location, long exitTime, long timestamp) {
+    public boolean addExit(Location location, long exitTime, long timestamp) {
         synchronized (track) {
             if (!track.isEmpty()) {
                 DummyTrackPoint last = track.get(track.size() - 1);

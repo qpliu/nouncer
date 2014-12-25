@@ -41,7 +41,7 @@ public class DBStore implements Store {
                 db.execSQL("CREATE INDEX location_latitude ON location (latitude)");
                 db.execSQL("CREATE INDEX location_longitude ON location (longitude)");
 
-                db.execSQL("CREATE TABLE route (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0)");
+                db.execSQL("CREATE TABLE route (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, starred INTEGER NOT NULL DEFAULT 0)");
                 db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, PRIMARY KEY (route_id, location_id, route_index))");
 
                 db.execSQL("CREATE TABLE track (id INTEGER PRIMARY KEY AUTOINCREMENT, location_id INTEGER REFERENCES location (id), entry_time INTEGER NOT NULL, exit_time INTEGER, entry_timestamp INTEGER NOT NULL, exit_timestamp INTEGER)");
@@ -158,6 +158,8 @@ public class DBStore implements Store {
         }
     };
 
+    private HashMap<Long,Boolean> starredCache = new HashMap<Long,Boolean>();
+
     private class DBRoute implements Route {
         private final long id;
         private final String name;
@@ -175,7 +177,6 @@ public class DBStore implements Store {
             } finally {
                 c.close();
             }
-
         }
 
         @Override
@@ -196,6 +197,36 @@ public class DBStore implements Store {
         @Override
         public List<RoutePoint> getRoutePoints() {
             return new ArrayList<RoutePoint>(routePoints);
+        }
+
+        @Override
+        public boolean isStarred() {
+            synchronized (starredCache) {
+                if (starredCache.containsKey(id)) {
+                    return starredCache.get(id);
+                }
+            }
+            Cursor c = db.rawQuery("SELECT starred FROM route WHERE id = ?", new String[] { String.valueOf(id) });
+            boolean starred = false;
+            try {
+                starred = c.moveToNext() && c.getInt(0) != 0;
+            } finally {
+                c.close();
+            }
+            synchronized (starredCache) {
+                starredCache.put(id, starred);
+            }
+            return starred;
+        }
+
+        @Override
+        public void setStarred(boolean starred) {
+            ContentValues values = new ContentValues();
+            values.put("starred", starred ? 1 : 0);
+            db.update("route", values, "id = ?", new String[] { String.valueOf(id) });
+            synchronized (starredCache) {
+                starredCache.put(id, starred);
+            }
         }
     }
 

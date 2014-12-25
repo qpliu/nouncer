@@ -9,6 +9,7 @@ import com.yrek.nouncer.data.RoutePoint;
 class DummyRoute implements Route {
     private final String name;
     private final DummyRoutePoint[] routePoints;
+    private boolean starred = false;
 
     DummyRoute(String name, DummyRoutePoint... routePoints) {
         this.name = name;
@@ -38,5 +39,14 @@ class DummyRoute implements Route {
         }
         return list;
     }
-}
 
+    @Override
+    public boolean isStarred() {
+        return starred;
+    }
+
+    @Override
+    public void setStarred(boolean starred) {
+        this.starred = starred;
+    }
+}

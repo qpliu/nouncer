@@ -7,4 +7,6 @@ public interface Route {
     public int getRoutePointCount();
     public RoutePoint getRoutePoint(int index);
     public List<RoutePoint> getRoutePoints();
+    public boolean isStarred();
+    public void setStarred(boolean starred);
 }
