@@ -8,12 +8,14 @@
   <TextView
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
-     android:id="@+id/location_text"
+     android:id="@+id/name"
      />
   <LinearLayout
      android:orientation="horizontal"
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
+     android:id="@+id/location"
+     android:visibility="visible"
      >
     <TextView
        android:layout_width="wrap_content"
@@ -57,6 +59,47 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/time_differential"
+       android:textColor="#ffa"
+     />
+  </LinearLayout>
+  <LinearLayout
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content"
+     android:id="@+id/route"
+     android:visibility="gone"
+     >
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Start:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/route_start_time"
+       android:textColor="#8f8"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" End:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/route_end_time"
+       android:textColor="#f88"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" Time:"
+     />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/route_time"
        android:textColor="#ffa"
      />
   </LinearLayout>

@@ -26,6 +26,7 @@ public class Main extends Activity {
     private PointProcessor.Listener locationListener;
     private PointReceiver pointListener;
     private AnnouncerServiceConnection serviceConnection;
+    private static final long MAX_AGE = 12L*3600L*1000L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +40,7 @@ public class Main extends Activity {
                     convertView = Main.this.getLayoutInflater().inflate(R.layout.track_entry, parent, false);
                 }
                 TrackPoint trackPoint = getItem(position);
-                ((TextView) convertView.findViewById(R.id.location_text)).setText(trackPoint.getLocation().getName());
+                ((TextView) convertView.findViewById(R.id.name)).setText(trackPoint.getLocation().getName());
                 ((TextView) convertView.findViewById(R.id.entry_time)).setText(String.format("%tT", trackPoint.getEntryTime()));
                 ((TextView) convertView.findViewById(R.id.exit_time)).setText(String.format("%tT", trackPoint.getExitTime()));
                 long dt = Math.max(0L, trackPoint.getExitTime() - trackPoint.getEntryTime());
@@ -81,7 +82,7 @@ public class Main extends Activity {
                     @Override public void run() {
                         locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), entryTime));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, Math.max(timestamp, entryTime), 20));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - MAX_AGE, Math.max(timestamp, entryTime), 20));
                     }
                 });
             }
@@ -90,7 +91,7 @@ public class Main extends Activity {
                     @Override public void run() {
                         locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), exitTime));
                         listAdapter.clear();
-                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, Math.max(timestamp, exitTime), 20));
+                        listAdapter.addAll(serviceConnection.announcerService.getTrackStore().getTrackPoints(timestamp - MAX_AGE, Math.max(timestamp, exitTime), 20));
                     }
                 });
             }
@@ -145,7 +146,7 @@ public class Main extends Activity {
                     long timestamp = System.currentTimeMillis();
                     ArrayAdapter listAdapter = (ArrayAdapter) ((ListView) findViewById(R.id.track_list)).getAdapter();
                     listAdapter.clear();
-                    listAdapter.addAll(announcerService.getTrackStore().getTrackPoints(timestamp - 10800000L, timestamp, 20));
+                    listAdapter.addAll(announcerService.getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 20));
                 }
             });
         }
