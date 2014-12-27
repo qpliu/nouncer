@@ -120,9 +120,11 @@ class LocationSource {
             if (level > 0 && dist >= LISTENER_PARAMETERS[level].shutdownDistance) {
                 stop();
             }
-            if (level < LISTENER_PARAMETERS.length && dist < LISTENER_PARAMETERS[level].addListenerDistance) {
-                child = new Listener(level + 1, this);
-                child.start();
+            Listener l = this;
+            while (l.child == null && l.level < LISTENER_PARAMETERS.length && dist < LISTENER_PARAMETERS[l.level].addListenerDistance) {
+                l.child = new Listener(l.level + 1, l);
+                l.child.start();
+                l = l.child;
             }
         }
 
