@@ -22,6 +22,20 @@
        android:id="@+id/stop_button"
        android:text="Stop"
        />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/service_running"
+       android:text="Running"
+       android:textColor="#0f0"
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/service_not_running"
+       android:text="Not running"
+       android:textColor="#f00"
+       />
   </LinearLayout>
   <TextView
      android:layout_width="fill_parent"

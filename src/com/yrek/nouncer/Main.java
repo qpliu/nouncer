@@ -101,11 +101,15 @@ public class Main extends Activity {
         findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 startService(new Intent(Main.this, AnnouncerService.class));
+                findViewById(R.id.service_running).setVisibility(View.VISIBLE);
+                findViewById(R.id.service_not_running).setVisibility(View.GONE);
             }
         });
         findViewById(R.id.stop_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 serviceConnection.announcerService.stop();
+                findViewById(R.id.service_running).setVisibility(View.GONE);
+                findViewById(R.id.service_not_running).setVisibility(View.VISIBLE);
             }
         });
     }
@@ -115,6 +119,8 @@ public class Main extends Activity {
         super.onResume();
         serviceConnection = new AnnouncerServiceConnection();
         bindService(new Intent(this, AnnouncerService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        findViewById(R.id.service_running).setVisibility(View.GONE);
+        findViewById(R.id.service_not_running).setVisibility(View.GONE);
     }
 
     @Override
@@ -134,6 +140,13 @@ public class Main extends Activity {
                 @Override public void run() {
                     ArrayAdapter<ListEntry> listAdapter = (ArrayAdapter<ListEntry>) ((ListView) findViewById(R.id.track_list)).getAdapter();
                     fillList(System.currentTimeMillis(), announcerService, listAdapter);
+                    if (announcerService.isStarted()) {
+                        findViewById(R.id.service_running).setVisibility(View.VISIBLE);
+                        findViewById(R.id.service_not_running).setVisibility(View.GONE);
+                    } else {
+                        findViewById(R.id.service_running).setVisibility(View.GONE);
+                        findViewById(R.id.service_not_running).setVisibility(View.VISIBLE);
+                    }
                 }
             });
         }
