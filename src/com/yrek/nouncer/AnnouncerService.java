@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.PowerManager;
 
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Point;
@@ -26,6 +27,7 @@ public class AnnouncerService extends Service {
     private PointReceiver pointListener = null;
     private PointProcessor.Listener locationListener = null;
     private RouteProcessor.Listener routeListener = null;
+    private PowerManager.WakeLock wakeLock = null;
 
     public class LocalBinder extends Binder {
         AnnouncerService getService() {
@@ -44,11 +46,14 @@ public class AnnouncerService extends Service {
     public void onCreate() {
         super.onCreate();
         store = new DBStore(this);
+        wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
+        wakeLock.setReferenceCounted(false);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        wakeLock.release();
         if (locationSource != null) {
             locationSource.stop();
             locationSource = null;
@@ -61,6 +66,7 @@ public class AnnouncerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        wakeLock.acquire();
         if (announcer == null) {
             announcer = new Announcer(this);
             announcer.start();
@@ -140,6 +146,7 @@ public class AnnouncerService extends Service {
             announcer.stop();
             announcer = null;
         }
+        wakeLock.release();
         stopSelf();
     }
 
