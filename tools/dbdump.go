@@ -67,10 +67,10 @@ func GetTrack(rows *sql.Rows) *Track {
 	if err := rows.Scan(&t.Id, &t.Name, &t.Lat, &t.Lon, &t.Elev, &entry, &exit, &entryTimestamp, &exitTimestamp); err != nil {
 		panic(err)
 	}
-	t.Entry = time.Unix(entry/1000, (entry%1000)*10000000)
-	t.Exit = time.Unix(exit/1000, (exit%1000)*10000000)
-	t.EntryTimestamp = time.Unix(entryTimestamp/1000, (entryTimestamp%1000)*10000000)
-	t.ExitTimestamp = time.Unix(exitTimestamp/1000, (exitTimestamp%1000)*10000000)
+	t.Entry = time.Unix(entry/1000, (entry%1000)*1000000)
+	t.Exit = time.Unix(exit/1000, (exit%1000)*1000000)
+	t.EntryTimestamp = time.Unix(entryTimestamp/1000, (entryTimestamp%1000)*1000000)
+	t.ExitTimestamp = time.Unix(exitTimestamp/1000, (exitTimestamp%1000)*1000000)
 	return t
 }
 
@@ -99,7 +99,7 @@ func NearestLocation(p *Point, locs []*Location, maxDist float64) (*Location, fl
 	return nearest, maxDist
 }
 
-func ExtrapolateTime(p1, p2 *Point, loc *Location) time.Time {
+func ExtrapolateTime(p1, p2 *Point, loc *Location) (time.Time, float64) {
 	dt := time.Second
 	if p1.Time.After(p2.Time) {
 		dt = -time.Second
@@ -113,7 +113,7 @@ func ExtrapolateTime(p1, p2 *Point, loc *Location) time.Time {
 		p.Lon += dlon
 		d := Dist(&p.Pt, &loc.Pt)
 		if d > dist {
-			return p.Time
+			return p.Time, dist
 		}
 		dist = d
 		p.Time = p.Time.Add(dt)
@@ -156,28 +156,30 @@ func main() {
 		printPoint := p != nil
 		if t != nil {
 			if !entered && (p == nil || p.Time.After(t.Entry)) {
-				fmt.Printf("%s ENTER: %s (timestamp:%s)\n", t.Entry.Format("15:04:05"), t.Name, t.EntryTimestamp.Format("15:04:05"))
+				fmt.Printf("%s ENTER: %.23s (timestamp:%s)\n", t.Entry.Format("15:04:05"), t.Name, t.EntryTimestamp.Format("15:04:05"))
 				entered = true
 			}
 			if entered && (p == nil || p.Time.After(t.Exit)) {
-				fmt.Printf("%s EXIT: %s (timestamp:%s)\n", t.Exit.Format("15:04:05"), t.Name, t.ExitTimestamp.Format("15:04:05"))
+				fmt.Printf("%s EXIT: %.23s (timestamp:%s)\n", t.Exit.Format("15:04:05"), t.Name, t.ExitTimestamp.Format("15:04:05"))
 				t = nil
 				printPoint = false
 			}
 		}
 		if printPoint {
-			loc, dist := NearestLocation(p, locs, 100)
+			loc, dist := NearestLocation(p, locs, 500)
 			s := fmt.Sprintf("%s (%.0f)", p.Time.Format("15:04:05"), p.Elev*3.28084)
 			if loc == nil {
 				fmt.Printf("%s\n", s)
 			} else {
-				fmt.Printf("%-18s %5.2f %s (%.0f)", s, dist, loc.Name, loc.Elev*3.28084)
+				fmt.Printf("%-18s %5.2f %.23s (%.0f)", s, dist, loc.Name, loc.Elev*3.28084)
 				if lastPoint != nil {
 					lastDist := Dist(&lastPoint.Pt, &loc.Pt)
 					if lastDist > dist {
-						fmt.Printf(" ENTRY:%s", ExtrapolateTime(lastPoint, p, loc).Format("15:04:05"))
+						t, d := ExtrapolateTime(lastPoint, p, loc)
+						fmt.Printf(" ENTRY:%s %5.2f", t.Format("15:04:05"), d)
 					} else {
-						fmt.Printf(" EXIT:%s", ExtrapolateTime(p, lastPoint, loc).Format("15:04:05"))
+						t, d := ExtrapolateTime(p, lastPoint, loc)
+						fmt.Printf(" EXIT:%s %5.2f", t.Format("15:04:05"), d)
 					}
 				}
 				fmt.Printf("\n")
