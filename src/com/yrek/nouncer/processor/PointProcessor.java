@@ -23,7 +23,7 @@ public class PointProcessor implements PointReceiver {
     public PointProcessor(LocationStore locationStore, Listener listener) {
         this.locationStore = locationStore;
         this.listener = listener;
-        this.entryRadius = 20.0;
+        this.entryRadius = 30.0;
         this.exitRadius = 40.0;
     }
 
