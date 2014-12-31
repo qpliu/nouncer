@@ -29,6 +29,9 @@ public class PointProcessor implements PointReceiver {
 
     @Override
     public void receivePoint(Point point) {
+        if (lastPoint != null && point.getTime() - lastPoint.getTime() < 1000L) {
+            return;
+        }
         if (proximateLocation != null) {
             double d = distance(point, proximateLocation);
             if (d >= exitRadius) {

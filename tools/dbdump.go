@@ -33,6 +33,7 @@ type Location struct {
 type Point struct {
 	Pt
 	Time time.Time
+	Tag  string
 }
 
 type Track struct {
@@ -58,7 +59,7 @@ func GetLocation(rows *sql.Rows) *Location {
 func GetPoint(rows *sql.Rows) *Point {
 	p := &Point{}
 	var t int64
-	if err := rows.Scan(&p.Lat, &p.Lon, &p.Elev, &t); err != nil {
+	if err := rows.Scan(&p.Lat, &p.Lon, &p.Elev, &t, &p.Tag); err != nil {
 		panic(err)
 	}
 	p.Time = time.Unix(t/1000, (t%1000)*1000000)
@@ -170,7 +171,7 @@ func main() {
 	defer db.Close()
 
 	locs := GetLocations(db)
-	points, err := db.Query("SELECT latitude, longitude, elevation, time FROM point ORDER BY time ASC")
+	points, err := db.Query("SELECT latitude, longitude, elevation, time, tag FROM point ORDER BY time ASC")
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +210,7 @@ func main() {
 		}
 		if printPoint {
 			loc, dist := NearestLocation(p, locs, 999)
-			s := fmt.Sprintf("%s (%.0f)", p.Time.Format("15:04:05"), p.Elev*3.28084)
+			s := fmt.Sprintf("%s%s (%.0f)", p.Time.Format("15:04:05"), p.Tag, p.Elev*3.28084)
 			if loc == nil {
 				fmt.Printf("%s\n", s)
 			} else {
@@ -227,7 +228,9 @@ func main() {
 				}
 				fmt.Printf("\n")
 			}
-			lastPoint = p
+			if p.Tag[0] == '+' {
+				lastPoint = p
+			}
 			p = nil
 		}
 	}

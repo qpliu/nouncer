@@ -48,7 +48,7 @@ public class DBStore implements Store {
                 db.execSQL("CREATE INDEX track_entry_time ON track (entry_time)");
                 db.execSQL("CREATE INDEX track_exit_time ON track (exit_time)");
 
-                db.execSQL("CREATE TABLE point (latitude REAL NOT NULL, longitude REAL NOT NULL, elevation REAL, time INTEGER NOT NULL)");
+                db.execSQL("CREATE TABLE point (latitude REAL NOT NULL, longitude REAL NOT NULL, elevation REAL, time INTEGER NOT NULL, tag TEXT)");
                 db.execSQL("CREATE INDEX point_time ON point (time)");
 
                 try {
@@ -278,9 +278,9 @@ public class DBStore implements Store {
         }
 
         @Override
-        public boolean addPoint(Point point) {
+        public boolean addPoint(Point point, String tag) {
             if (STORE_POINTS) {
-                insertPoint(db, point.getLatitude(), point.getLongitude(), point.getElevation(), point.getTime());
+                insertPoint(db, point.getLatitude(), point.getLongitude(), point.getElevation(), point.getTime(), tag);
             }
             return true;
         }
@@ -468,12 +468,13 @@ public class DBStore implements Store {
         int count = db.update("track", values, "id = ?", new String[] { String.valueOf(trackPointId) });
     }
 
-    private static long insertPoint(SQLiteDatabase db, double latitude, double longitude, double elevation, long time) {
+    private static long insertPoint(SQLiteDatabase db, double latitude, double longitude, double elevation, long time, String tag) {
         ContentValues values = new ContentValues();
         values.put("latitude", latitude);
         values.put("longitude", longitude);
         values.put("elevation", elevation);
         values.put("time", time);
+        values.put("tag", tag);
         return db.insert("point", null, values);
     }
 

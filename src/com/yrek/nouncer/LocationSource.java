@@ -12,16 +12,19 @@ import com.yrek.nouncer.data.Point;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.store.LocationStore;
+import com.yrek.nouncer.store.PointStore;
 
 class LocationSource {
     private final Context context;
     private final LocationStore locationStore;
+    private final PointStore pointStore;
     private final PointReceiver pointReceiver;
     private HandlerThread handlerThread = null;
 
-    LocationSource(Context context, LocationStore locationStore, PointReceiver pointReceiver) {
+    LocationSource(Context context, LocationStore locationStore, PointStore pointStore, PointReceiver pointReceiver) {
         this.context = context;
         this.locationStore = locationStore;
+        this.pointStore = pointStore;
         this.pointReceiver = pointReceiver;
     }
 
@@ -92,9 +95,6 @@ class LocationSource {
 
         @Override
         public void onLocationChanged(final android.location.Location location) {
-            if (child != null) {
-                return;
-            }
             final long time = System.currentTimeMillis();
             Point point = new Point() {
                 @Override public double getLatitude() {
@@ -113,7 +113,11 @@ class LocationSource {
                     return time;
                 }
             };
+            pointStore.addPoint(point, child == null ? "+" + level : "-" + level);
             pointReceiver.receivePoint(point);
+            if (child != null) {
+                return;
+            }
             double dist = LISTENER_PARAMETERS[level].shutdownDistance;
             for (Location l : locationStore.getLocations(location.getLatitude(), location.getLongitude(), Math.min(dist, LISTENER_PARAMETERS[0].addListenerDistance))) {
                 dist = Math.min(dist, PointProcessor.distance(point, l));
@@ -131,14 +135,38 @@ class LocationSource {
 
         @Override
         public void onProviderDisabled(String provider) {
+            logEvent("providerDisabled"+level+":"+provider);
         }
 
         @Override
         public void onProviderEnabled(String provider) {
+            logEvent("providerEnabled"+level+":"+provider);
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
+            logEvent("statusChanged"+level+":"+provider+","+status);
+        }
+
+        private void logEvent(String note) {
+            final long time = System.currentTimeMillis();
+            pointStore.addPoint(new Point() {
+                @Override public double getLatitude() {
+                    return 0.0;
+                }
+
+                @Override public double getLongitude() {
+                    return 0.0;
+                }
+
+                @Override public double getElevation() {
+                    return 0.0;
+                }
+
+                @Override public long getTime() {
+                    return time;
+                }
+            }, note);
         }
     }
 }

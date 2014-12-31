@@ -30,7 +30,7 @@ class DummyPointStore implements PointStore {
     }
 
     @Override
-    public boolean addPoint(Point point) {
+    public boolean addPoint(Point point, String tag) {
         synchronized (points) {
             if (!points.isEmpty()) {
                 if (points.get(points.size() - 1).getTime() >= point.getTime()) {

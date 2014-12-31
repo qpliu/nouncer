@@ -14,7 +14,6 @@ import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
 import com.yrek.nouncer.store.Store;
-import com.yrek.nouncer.store.PointStore;
 import com.yrek.nouncer.store.RouteStore;
 import com.yrek.nouncer.store.TrackStore;
 
@@ -102,10 +101,9 @@ public class AnnouncerService extends Service {
                 }
             });
 
-            locationSource = new LocationSource(this, store.getLocationStore(), new PointReceiver() {
+            locationSource = new LocationSource(this, store.getLocationStore(), store.getPointStore(), new PointReceiver() {
                 @Override public void receivePoint(Point point) {
                     try {
-                        store.getPointStore().addPoint(point);
                         pointProcessor.receivePoint(point);
                         PointReceiver listener = pointListener;
                         if (listener != null) {
