@@ -125,11 +125,11 @@ public class AnnouncerService extends Service {
         this.routeListener = routeListener;
     }
 
-    boolean isStarted() {
+    public boolean isStarted() {
         return locationSource != null;
     }
 
-    void stop() {
+    public void stop() {
         if (locationSource != null) {
             locationSource.stop();
             locationSource = null;
@@ -141,11 +141,11 @@ public class AnnouncerService extends Service {
         stopSelf();
     }
 
-    TrackStore getTrackStore() {
+    public TrackStore getTrackStore() {
         return store.getTrackStore();
     }
 
-    RouteStore getRouteStore() {
+    public RouteStore getRouteStore() {
         return store.getRouteStore();
     }
 }
