@@ -50,17 +50,17 @@ public class Main extends Activity {
 
         final TextView routeText = (TextView) findViewById(R.id.route_text);
         routeListener = new RouteProcessor.Listener() {
-            @Override public void receiveEntry(final Route route, final long startTime, final int routeIndex, final long entryTime) {
+            @Override public void receiveEntry(final Route route, final long startTime, final int routeIndex, final long entryTime, final double entryHeading, final double entrySpeed) {
                 routeText.post(new Runnable() {
                     @Override public void run() {
-                        routeText.setText(String.format("Entry: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), entryTime, (entryTime - startTime) / 60000L, (entryTime - startTime) % 60000L / 1000L));
+                        routeText.setText(String.format("Entry: Route: %s Location %d: %s %tR %d:%02d %s %.1fmph", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), entryTime, (entryTime - startTime) / 60000L, (entryTime - startTime) % 60000L / 1000L, headingName(entryHeading), entrySpeed*2.23694));
                     }
                 });
             }
-            @Override public void receiveExit(final Route route, final long startTime, final int routeIndex, final long exitTime) {
+            @Override public void receiveExit(final Route route, final long startTime, final int routeIndex, final long exitTime, final double exitHeading, final double exitSpeed) {
                 routeText.post(new Runnable() {
                     @Override public void run() {
-                        routeText.setText(String.format("Exit: Route: %s Location %d: %s %tR %d:%02d", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), exitTime, (exitTime - startTime) / 60000L, (exitTime - startTime) % 60000L / 1000L));
+                        routeText.setText(String.format("Exit: Route: %s Location %d: %s %tR %d:%02d %s %.1fmph", route.getName(), routeIndex, route.getRoutePoint(routeIndex).getLocation().getName(), exitTime, (exitTime - startTime) / 60000L, (exitTime - startTime) % 60000L / 1000L, headingName(exitHeading), exitSpeed*2.23694));
                     }
                 });
             }
@@ -68,18 +68,18 @@ public class Main extends Activity {
 
         final TextView locationText = (TextView) findViewById(R.id.location_text);
         locationListener = new PointProcessor.Listener() {
-            @Override public void receiveEntry(final Location location, final long entryTime, final long timestamp) {
+            @Override public void receiveEntry(final Location location, final long entryTime, final double entryHeading, final double entrySpeed, final long timestamp) {
                 locationText.post(new Runnable() {
                     @Override public void run() {
-                        locationText.setText(String.format("Entry: Location: %s %tR", location.getName(), entryTime));
+                        locationText.setText(String.format("Entry: Location: %s %tR %s %.1fmph", location.getName(), entryTime, headingName(entryHeading), entrySpeed*2.23694));
                         fillList(Math.max(timestamp, entryTime), serviceConnection.announcerService, listAdapter);
                     }
                 });
             }
-            @Override public void receiveExit(final Location location, final long exitTime, final long timestamp) {
+            @Override public void receiveExit(final Location location, final long exitTime, final double exitHeading, final double exitSpeed, final long timestamp) {
                 locationText.post(new Runnable() {
                     @Override public void run() {
-                        locationText.setText(String.format("Exit: Location: %s %tR", location.getName(), exitTime));
+                        locationText.setText(String.format("Exit: Location: %s %tR %s %.1fmph", location.getName(), exitTime, headingName(exitHeading), exitSpeed*2.23694));
                         fillList(Math.max(timestamp, exitTime), serviceConnection.announcerService, listAdapter);
                     }
                 });
@@ -161,20 +161,20 @@ public class Main extends Activity {
     private void fillList(long timestamp, AnnouncerService announcerService, final ArrayAdapter<ListEntry> listAdapter) {
         listAdapter.clear();
         RouteProcessor routeProcessor = new RouteProcessor(announcerService.getRouteStore(), null, new RouteProcessor.Listener() {
-            @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime) {
+            @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
                 if (routeIndex + 1 >= route.getRoutePointCount()) {
                     listAdapter.insert(new ListEntry(route, startTime, entryTime), 0);
                 }
             }
-            @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime) {
+            @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed) {
             }
         });
         List<TrackPoint> trackPoints = announcerService.getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
         Collections.reverse(trackPoints);
         for (TrackPoint trackPoint : trackPoints) {
             listAdapter.insert(new ListEntry(trackPoint), 0);
-            routeProcessor.receiveEntry(trackPoint.getLocation(), trackPoint.getEntryTime(), trackPoint.getEntryTime());
-            routeProcessor.receiveExit(trackPoint.getLocation(), trackPoint.getExitTime(), trackPoint.getExitTime());
+            routeProcessor.receiveEntry(trackPoint.getLocation(), trackPoint.getEntryTime(), trackPoint.getEntryHeading(), trackPoint.getEntrySpeed(), trackPoint.getEntryTime());
+            routeProcessor.receiveExit(trackPoint.getLocation(), trackPoint.getExitTime(), trackPoint.getExitHeading(), trackPoint.getExitSpeed(), trackPoint.getExitTime());
         }
     }
 
@@ -217,6 +217,10 @@ public class Main extends Activity {
                     dt = Math.max(0L, trackPoint.getEntryTime() - lastPoint.getExitTime());
                     ((TextView) view.findViewById(R.id.time_differential)).setText(String.format("% 3d:%02d", dt / 60000L, dt % 60000L / 1000L));
                 }
+                ((TextView) view.findViewById(R.id.entry_heading)).setText(headingName(trackPoint.getEntryHeading()));
+                ((TextView) view.findViewById(R.id.exit_heading)).setText(headingName(trackPoint.getExitHeading()));
+                ((TextView) view.findViewById(R.id.entry_speed)).setText(String.format("%.1f", trackPoint.getEntrySpeed()*2.23694));
+                ((TextView) view.findViewById(R.id.exit_speed)).setText(String.format("%.1f", trackPoint.getExitSpeed()*2.23694));
             } else {
                 view.findViewById(R.id.location).setVisibility(View.GONE);
                 view.findViewById(R.id.route).setVisibility(View.VISIBLE);
@@ -226,6 +230,26 @@ public class Main extends Activity {
                 long dt = Math.max(0L, routeEndTime - routeStartTime);
                 ((TextView) view.findViewById(R.id.route_time)).setText(String.format("%d:%02d", dt / 60000L, dt % 60000L / 1000L));
             }
+        }
+    }
+
+    private static String headingName(double heading) {
+        if (heading < -157.5 || heading > 157.5) {
+            return "S";
+        } else if (heading < -112.5) {
+            return "SW";
+        } else if  (heading < -65.5) {
+            return "W";
+        } else if  (heading < -22.5) {
+            return "NW";
+        } else if  (heading < 22.5) {
+            return "N";
+        } else if  (heading < 67.5) {
+            return "NE";
+        } else if  (heading < 112.5) {
+            return "E";
+        } else {
+            return "SE";
         }
     }
 }

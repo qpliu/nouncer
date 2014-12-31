@@ -31,31 +31,31 @@ class DummyTrackStore implements TrackStore {
     }
 
     @Override
-    public boolean addEntry(Location location, long entryTime, long timestamp) {
+    public boolean addEntry(Location location, long entryTime, double entryHeading, double entrySpeed, long timestamp) {
         synchronized (track) {
             if (!track.isEmpty()) {
                 if (track.get(track.size() - 1).getExitTime() >= entryTime) {
                     return false;
                 }
             }
-            track.add(new DummyTrackPoint((DummyLocation) location, entryTime));
+            track.add(new DummyTrackPoint((DummyLocation) location, entryTime, entryHeading, entrySpeed));
         }
         return true;
     }
 
     @Override
-    public boolean addExit(Location location, long exitTime, long timestamp) {
+    public boolean addExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
         synchronized (track) {
             if (!track.isEmpty()) {
                 DummyTrackPoint last = track.get(track.size() - 1);
                 if (last.getExitTime() > exitTime) {
                     return false;
                 } else if (last.getLocation().equals(location)) {
-                    last.setExitTime(exitTime);
+                    last.setExitTime(exitTime, exitHeading, exitSpeed);
                     return true;
                 }
             }
-            track.add(new DummyTrackPoint((DummyLocation) location, exitTime));
+            track.add(new DummyTrackPoint((DummyLocation) location, exitTime, exitHeading, exitSpeed));
         }
         return true;
     }

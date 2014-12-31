@@ -25,7 +25,7 @@ public class RouteProcessor implements PointProcessor.Listener {
         this.pendingRoutes = new ArrayList<PendingRoute>();
     }
 
-    private void process(Location location, long timestamp, boolean entry) {
+    private void process(Location location, long timestamp, double heading, double speed, boolean entry) {
         Collection<Route> routes = routeStore.getRoutes(location);
         int length = 0;
         for (Route route : routes) {
@@ -82,26 +82,26 @@ public class RouteProcessor implements PointProcessor.Listener {
         for (PendingRoute p : pendingRoutes) {
             assert p.route.getRoutePoint(p.index).getLocation().equals(location);
             if (entry) {
-                listener.receiveEntry(p.route, p.startTime, p.index, timestamp);
+                listener.receiveEntry(p.route, p.startTime, p.index, timestamp, heading, speed);
             } else {
-                listener.receiveExit(p.route, p.startTime, p.index, timestamp);
+                listener.receiveExit(p.route, p.startTime, p.index, timestamp, heading, speed);
             }
         }
     }
 
     @Override
-    public void receiveEntry(Location location, long entryTime, long timestamp) {
-        process(location, entryTime, true);
+    public void receiveEntry(Location location, long entryTime, double entryHeading, double entrySpeed, long timestamp) {
+        process(location, entryTime, entryHeading, entrySpeed, true);
     }
 
     @Override
-    public void receiveExit(Location location, long exitTime, long timestamp) {
-        process(location, exitTime, false);
+    public void receiveExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
+        process(location, exitTime, exitHeading, exitSpeed, false);
     }
 
     public interface Listener {
-        public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime);
-        public void receiveExit(Route route, long startTime, int routeIndex, long exitTime);
+        public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed);
+        public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed);
     }
 
     private class PendingRoute {

@@ -44,7 +44,7 @@ public class DBStore implements Store {
                 db.execSQL("CREATE TABLE route (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, starred INTEGER NOT NULL DEFAULT 0)");
                 db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, PRIMARY KEY (route_id, location_id, route_index))");
 
-                db.execSQL("CREATE TABLE track (id INTEGER PRIMARY KEY AUTOINCREMENT, location_id INTEGER REFERENCES location (id), entry_time INTEGER NOT NULL, exit_time INTEGER, entry_timestamp INTEGER NOT NULL, exit_timestamp INTEGER)");
+                db.execSQL("CREATE TABLE track (id INTEGER PRIMARY KEY AUTOINCREMENT, location_id INTEGER REFERENCES location (id), entry_time INTEGER NOT NULL, exit_time INTEGER, entry_heading FLOAT NOT NULL, exit_heading FLOAT, entry_speed FLOAT NOT NULL, exit_speed FLOAT, entry_timestamp INTEGER NOT NULL, exit_timestamp INTEGER)");
                 db.execSQL("CREATE INDEX track_entry_time ON track (entry_time)");
                 db.execSQL("CREATE INDEX track_exit_time ON track (exit_time)");
 
@@ -329,7 +329,7 @@ public class DBStore implements Store {
         @Override
         public List<TrackPoint> getTrackPoints(long minTimestamp, long maxTimestamp, int maxPoints) {
             ArrayList<TrackPoint> list = new ArrayList<TrackPoint>();
-            Cursor cursor = db.rawQuery("SELECT location_id, name, latitude, longitude, elevation, entry_time, exit_time FROM location, track WHERE location.id = location_id AND entry_time >= ? AND entry_time <= ? ORDER BY entry_time DESC", new String[] { String.valueOf(minTimestamp), String.valueOf(maxTimestamp) });
+            Cursor cursor = db.rawQuery("SELECT location_id, name, latitude, longitude, elevation, entry_time, exit_time, entry_heading, exit_heading, entry_speed, exit_speed FROM location, track WHERE location.id = location_id AND entry_time >= ? AND entry_time <= ? ORDER BY entry_time DESC", new String[] { String.valueOf(minTimestamp), String.valueOf(maxTimestamp) });
             try {
                 while (cursor.moveToNext() && (maxPoints <= 0 || list.size() < maxPoints)) {
                     list.add(new DBTrackPoint(cursor));
@@ -341,25 +341,25 @@ public class DBStore implements Store {
         }
 
         @Override
-        public boolean addEntry(Location location, long entryTime, long timestamp) {
-            insertTrackPoint(db, ((DBLocation) location).id, entryTime, timestamp);
+        public boolean addEntry(Location location, long entryTime, double entryHeading, double entrySpeed, long timestamp) {
+            insertTrackPoint(db, ((DBLocation) location).id, entryTime, entryHeading, entrySpeed, timestamp);
             return true;
         }
 
         @Override
-        public boolean addExit(Location location, long exitTime, long timestamp) {
+        public boolean addExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
             long id = 0L;
             Cursor cursor = db.rawQuery("SELECT id, location_id FROM track ORDER BY entry_time DESC", new String[] {});
             try {
                 if (cursor.moveToNext() && ((DBLocation) location).id == cursor.getLong(1)) {
                     id = cursor.getLong(0);
                 } else {
-                    id = insertTrackPoint(db, ((DBLocation) location).id, exitTime, timestamp);
+                    id = insertTrackPoint(db, ((DBLocation) location).id, exitTime, exitHeading, exitSpeed, timestamp);
                 }
             } finally {
                 cursor.close();
             }
-            updateTrackPoint(db, id, exitTime, timestamp);
+            updateTrackPoint(db, id, exitTime, exitHeading, exitSpeed, timestamp);
             return true;
         }
     };
@@ -368,13 +368,20 @@ public class DBStore implements Store {
         private final Location location;
         private final long entryTime;
         private final long exitTime;
+        private final double entryHeading;
+        private final double exitHeading;
+        private final double entrySpeed;
+        private final double exitSpeed;
 
         DBTrackPoint(Cursor cursor) {
             this.location = new DBLocation(cursor, 0);
             this.entryTime = cursor.getLong(5);
             this.exitTime = cursor.isNull(6) ? entryTime : cursor.getLong(6);
+            this.entryHeading = cursor.getDouble(7);
+            this.exitHeading = cursor.isNull(8) ? entryHeading : cursor.getDouble(8);
+            this.entrySpeed = cursor.getDouble(9);
+            this.exitSpeed = cursor.isNull(10) ? entryHeading : cursor.getDouble(10);
         }
-
 
         @Override
         public Location getLocation() {
@@ -389,6 +396,26 @@ public class DBStore implements Store {
         @Override
         public long getExitTime() {
             return exitTime;
+        }
+
+        @Override
+        public double getEntryHeading() {
+            return entryHeading;
+        }
+
+        @Override
+        public double getExitHeading() {
+            return exitHeading;
+        }
+
+        @Override
+        public double getEntrySpeed() {
+            return entrySpeed;
+        }
+
+        @Override
+        public double getExitSpeed() {
+            return exitSpeed;
         }
     }
 
@@ -422,17 +449,21 @@ public class DBStore implements Store {
         return db.insert("route_point", null, values);
     }
 
-    private static long insertTrackPoint(SQLiteDatabase db, long locationId, long entryTime, long timestamp) {
+    private static long insertTrackPoint(SQLiteDatabase db, long locationId, long entryTime, double entryHeading, double entrySpeed, long timestamp) {
         ContentValues values = new ContentValues();
         values.put("location_id", locationId);
         values.put("entry_time", entryTime);
+        values.put("entry_heading", entryHeading);
+        values.put("entry_speed", entrySpeed);
         values.put("entry_timestamp", timestamp);
         return db.insert("track", null, values);
     }
 
-    private static void updateTrackPoint(SQLiteDatabase db, long trackPointId, long exitTime, long timestamp) {
+    private static void updateTrackPoint(SQLiteDatabase db, long trackPointId, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
         ContentValues values = new ContentValues();
         values.put("exit_time", exitTime);
+        values.put("exit_heading", exitHeading);
+        values.put("exit_speed", exitSpeed);
         values.put("exit_timestamp", timestamp);
         int count = db.update("track", values, "id = ?", new String[] { String.valueOf(trackPointId) });
     }

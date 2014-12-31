@@ -39,6 +39,10 @@ type Track struct {
 	Location
 	Entry          time.Time
 	Exit           time.Time
+	EntryHeading   float64
+	ExitHeading    float64
+	EntrySpeed     float64
+	ExitSpeed      float64
 	EntryTimestamp time.Time
 	ExitTimestamp  time.Time
 }
@@ -64,7 +68,7 @@ func GetPoint(rows *sql.Rows) *Point {
 func GetTrack(rows *sql.Rows) *Track {
 	t := &Track{}
 	var entry, exit, entryTimestamp, exitTimestamp int64
-	if err := rows.Scan(&t.Id, &t.Name, &t.Lat, &t.Lon, &t.Elev, &entry, &exit, &entryTimestamp, &exitTimestamp); err != nil {
+	if err := rows.Scan(&t.Id, &t.Name, &t.Lat, &t.Lon, &t.Elev, &entry, &exit, &t.EntryHeading, &t.ExitHeading, &t.EntrySpeed, &t.ExitSpeed, &entryTimestamp, &exitTimestamp); err != nil {
 		panic(err)
 	}
 	t.Entry = time.Unix(entry/1000, (entry%1000)*1000000)
@@ -120,6 +124,44 @@ func ExtrapolateTime(p1, p2 *Point, loc *Location) (time.Time, float64) {
 	}
 }
 
+func Heading(p1, p2 *Pt) (float64, string) {
+	dx := Dist(p1, &Pt{Lat: p1.Lat, Lon: p2.Lon})
+	dy := Dist(p1, &Pt{Lat: p2.Lat, Lon: p1.Lon})
+	if math.Signbit(p2.Lon - p1.Lon) {
+		dx = -dx
+	}
+	if math.Signbit(p2.Lat - p1.Lat) {
+		dy = -dy
+	}
+	h := 180 / math.Pi * math.Atan2(dx, dy)
+	return h, HeadingName(h)
+}
+
+func HeadingName(h float64) string {
+	switch {
+	case h < -157.5 || h > 157.5:
+		return "S"
+	case h < -112.5:
+		return "SW"
+	case h < -67.5:
+		return "W"
+	case h < -22.5:
+		return "NW"
+	case h < 22.5:
+		return "N"
+	case h < 67.5:
+		return "NE"
+	case h < 112.5:
+		return "E"
+	default:
+		return "SE"
+	}
+}
+
+func Speed(p1, p2 *Point) float64 {
+	return Dist(&p1.Pt, &p2.Pt) / p2.Time.Sub(p1.Time).Seconds()
+}
+
 func main() {
 	db, err := sql.Open("sqlite3", os.Args[1])
 	if err != nil {
@@ -133,7 +175,7 @@ func main() {
 		panic(err)
 	}
 	defer points.Close()
-	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time), entry_timestamp, coalesce(exit_timestamp,entry_timestamp) FROM location, track WHERE location.id = location_id ORDER BY track.id ASC")
+	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time), entry_heading, coalesce(exit_heading,entry_heading), entry_speed, coalesce(exit_speed,entry_speed), entry_timestamp, coalesce(exit_timestamp,entry_timestamp) FROM location, track WHERE location.id = location_id ORDER BY track.id ASC")
 	if err != nil {
 		panic(err)
 	}
@@ -156,30 +198,31 @@ func main() {
 		printPoint := p != nil
 		if t != nil {
 			if !entered && (p == nil || p.Time.After(t.Entry)) {
-				fmt.Printf("%s ENTER: %.23s (timestamp:%s)\n", t.Entry.Format("15:04:05"), t.Name, t.EntryTimestamp.Format("15:04:05"))
+				fmt.Printf("%s ENTER: %.23s (timestamp:%s) %.0f%s %.1fmph\n", t.Entry.Format("15:04:05"), t.Name, t.EntryTimestamp.Format("15:04:05"), t.EntryHeading, HeadingName(t.EntryHeading), t.EntrySpeed*2.23694)
 				entered = true
 			}
 			if entered && (p == nil || p.Time.After(t.Exit)) {
-				fmt.Printf("%s EXIT: %.23s (timestamp:%s)\n", t.Exit.Format("15:04:05"), t.Name, t.ExitTimestamp.Format("15:04:05"))
+				fmt.Printf("%s EXIT: %.23s (timestamp:%s) %.0f%s %.1fmph\n", t.Exit.Format("15:04:05"), t.Name, t.ExitTimestamp.Format("15:04:05"), t.ExitHeading, HeadingName(t.ExitHeading), t.ExitSpeed*2.23694)
 				t = nil
 				printPoint = false
 			}
 		}
 		if printPoint {
-			loc, dist := NearestLocation(p, locs, 500)
+			loc, dist := NearestLocation(p, locs, 999)
 			s := fmt.Sprintf("%s (%.0f)", p.Time.Format("15:04:05"), p.Elev*3.28084)
 			if loc == nil {
 				fmt.Printf("%s\n", s)
 			} else {
-				fmt.Printf("%-18s %5.2f %.23s (%.0f)", s, dist, loc.Name, loc.Elev*3.28084)
+				h, dir := Heading(&loc.Pt, &p.Pt)
+				fmt.Printf("%-15s %6.2f % 4.0f%2s %.13s (%.0f)", s, dist, h, dir, loc.Name, loc.Elev*3.28084)
 				if lastPoint != nil {
 					lastDist := Dist(&lastPoint.Pt, &loc.Pt)
 					if lastDist > dist {
 						t, d := ExtrapolateTime(lastPoint, p, loc)
-						fmt.Printf(" ENTRY:%s %5.2f", t.Format("15:04:05"), d)
+						fmt.Printf(" ENTRY:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
 					} else {
 						t, d := ExtrapolateTime(p, lastPoint, loc)
-						fmt.Printf(" EXIT:%s %5.2f", t.Format("15:04:05"), d)
+						fmt.Printf(" EXIT:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
 					}
 				}
 				fmt.Printf("\n")

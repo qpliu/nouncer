@@ -33,14 +33,14 @@ public class PointProcessor implements PointReceiver {
             double d = distance(point, proximateLocation);
             if (d >= exitRadius) {
                 if (lastDistance < exitRadius && entered) {
-                    listener.receiveExit(proximateLocation, extrapolateTime(point, lastPoint, proximateLocation), point.getTime());
+                    sendExit(proximateLocation, point, lastPoint);
                 }
                 proximateLocation = null;
                 entered = false;
             } else {
                 if (d < entryRadius && lastDistance >= entryRadius && !entered) {
                     entered = true;
-                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), point.getTime());
+                    sendEntry(proximateLocation, point, lastPoint);
                 }
                 lastPoint = point;
                 lastDistance = d;
@@ -58,21 +58,47 @@ public class PointProcessor implements PointReceiver {
         if (lastDistance < entryRadius) {
             if (lastPoint == null && !entered) {
                 entered = true;
-                listener.receiveEntry(proximateLocation, point.getTime(), point.getTime());
+                sendEntry(proximateLocation, point, null);
             } else {
                 double d = distance(lastPoint, proximateLocation);
                 if (d > lastDistance && !entered) {
                     entered = true;
-                    listener.receiveEntry(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), point.getTime());
+                    sendEntry(proximateLocation, point, lastPoint);
                 }
             }
         }
         lastPoint = point;
     }
 
+    private void sendExit(Location proximateLocation, Point point, Point lastPoint) {
+        listener.receiveExit(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), heading(proximateLocation, point), speed(lastPoint, point), point.getTime());
+    }
+
+    private void sendEntry(Location proximateLocation, Point point, Point lastPoint) {
+        long time;
+        double heading;
+        double speed;
+        if (lastPoint == null) {
+            time = point.getTime();
+            heading = heading(point, proximateLocation);
+            speed = 0.0;
+        } else {
+            time = extrapolateTime(lastPoint, point, proximateLocation);
+            if (time > point.getTime()) {
+                heading = heading(point, proximateLocation);
+            } else if (time < point.getTime()) {
+                heading = heading(proximateLocation, point);
+            } else {
+                heading = heading(lastPoint, point);
+            }
+            speed = speed(lastPoint, point);
+        }
+        listener.receiveEntry(proximateLocation, time, heading, speed, point.getTime());
+    }
+
     public interface Listener {
-        public void receiveEntry(Location location, long entryTime, long timestamp);
-        public void receiveExit(Location location, long exitTime, long timestamp);
+        public void receiveEntry(Location location, long entryTime, double entryHeading, double entrySpeed, long timestamp);
+        public void receiveExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp);
     }
 
     // p2 must be closer to location than p1
@@ -121,5 +147,37 @@ public class PointProcessor implements PointReceiver {
 
     public static double dlon(double lat, double dist) {
         return dist/(R*Math.cos(lat*Math.PI/180.0))*180.0/Math.PI;
+    }
+
+    public static double heading(Point p1, Point p2) {
+        return heading(p1.getLatitude(), p1.getLongitude(), p2.getLatitude(), p2.getLongitude());
+    }
+
+    public static double heading(Point p, Location l) {
+        return heading(p.getLatitude(), p.getLongitude(), l.getLatitude(), l.getLongitude());
+    }
+
+    public static double heading(Location l, Point p) {
+        return heading(l.getLatitude(), l.getLongitude(), p.getLatitude(), p.getLongitude());
+    }
+
+    public static double heading(double lat1, double lon1, double lat2, double lon2) {
+        double dx = distance(lat1, lon1, lat1, lon2);
+        double dy = distance(lat1, lon1, lat2, lon1);
+        if (lon1 > lon2) {
+            dx = -dx;
+        }
+        if (lat1 > lat2) {
+            dy = -dy;
+        }
+        return 180.0/Math.PI*Math.atan2(dx, dy);
+    }
+
+    public static double speed(Point p1, Point p2) {
+        if (p1.getTime() == p2.getTime()) {
+            return 0.0;
+        } else {
+            return 1000.0*distance(p1, p2)/((double) (p2.getTime() - p1.getTime()));
+        }
     }
 }
