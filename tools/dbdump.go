@@ -211,7 +211,7 @@ func main() {
 		if printPoint {
 			loc, dist := NearestLocation(p, locs, 999)
 			s := fmt.Sprintf("%s%s (%.0f)", p.Time.Format("15:04:05"), p.Tag, p.Elev*3.28084)
-			if loc == nil {
+			if loc == nil || p.Tag[0] != '+' {
 				fmt.Printf("%s\n", s)
 			} else {
 				h, dir := Heading(&loc.Pt, &p.Pt)
