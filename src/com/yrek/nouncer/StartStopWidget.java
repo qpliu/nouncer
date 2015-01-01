@@ -26,7 +26,7 @@ class StartStopWidget extends Widget {
                 if (announcerService != null) {
                     announcerService.stop();
                 }
-                showNothing.run();
+                showNotRunning.run();
             }
         });
     }
@@ -52,11 +52,13 @@ class StartStopWidget extends Widget {
         }
     };
 
+    @Override
     public void onServiceConnected(AnnouncerService announcerService) {
         this.announcerService = announcerService;
         post(announcerService.isStarted() ? showRunning : showNotRunning);
     }
 
+    @Override
     public void onServiceDisconnected() {
         this.announcerService = null;
         post(showNothing);

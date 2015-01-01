@@ -38,21 +38,28 @@
        android:textColor="#f00"
        />
   </LinearLayout>
-  <TextView
+  <LinearLayout
+     android:orientation="vertical"
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
-     android:id="@+id/point_text"
-     />
-  <TextView
-     android:layout_width="fill_parent"
-     android:layout_height="wrap_content"
-     android:id="@+id/location_text"
-     />
-  <TextView
-     android:layout_width="fill_parent"
-     android:layout_height="wrap_content"
-     android:id="@+id/route_text"
-     />
+     android:id="@+id/status_widget"
+     >
+    <TextView
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:id="@+id/point_text"
+       />
+    <TextView
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:id="@+id/location_text"
+       />
+    <TextView
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:id="@+id/route_text"
+       />
+  </LinearLayout>
   <ListView
      android:layout_width="fill_parent"
      android:layout_height="fill_parent"
