@@ -9,18 +9,21 @@ import java.util.List;
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.data.TrackPoint;
+import com.yrek.nouncer.store.AvailabilityStore;
 import com.yrek.nouncer.store.RouteStore;
 import com.yrek.nouncer.store.TrackStore;
 
 public class RouteProcessor implements PointProcessor.Listener {
     private final RouteStore routeStore;
     private final TrackStore trackStore;
+    private final AvailabilityStore availabilityStore;
     private final Listener listener;
     private final ArrayList<PendingRoute> pendingRoutes;
 
-    public RouteProcessor(RouteStore routeStore, TrackStore trackStore, Listener listener) {
+    public RouteProcessor(RouteStore routeStore, TrackStore trackStore, AvailabilityStore availabilityStore, Listener listener) {
         this.routeStore = routeStore;
         this.trackStore = trackStore;
+        this.availabilityStore = availabilityStore;
         this.listener = listener;
         this.pendingRoutes = new ArrayList<PendingRoute>();
     }

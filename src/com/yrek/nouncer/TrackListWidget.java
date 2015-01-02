@@ -72,7 +72,7 @@ class TrackListWidget extends Widget {
 
     private void fillList(long timestamp) {
         listAdapter.clear();
-        RouteProcessor routeProcessor = new RouteProcessor(announcerService.getRouteStore(), null, new RouteProcessor.Listener() {
+        RouteProcessor routeProcessor = new RouteProcessor(announcerService.getStore().getRouteStore(), null, announcerService.getStore().getAvailabilityStore(), new RouteProcessor.Listener() {
             @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
                 if (routeIndex + 1 >= route.getRoutePointCount()) {
                     listAdapter.insert(new ListEntry(route, startTime, entryTime), 0);
@@ -81,7 +81,7 @@ class TrackListWidget extends Widget {
             @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed) {
             }
         });
-        List<TrackPoint> trackPoints = announcerService.getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
+        List<TrackPoint> trackPoints = announcerService.getStore().getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
         Collections.reverse(trackPoints);
         for (TrackPoint trackPoint : trackPoints) {
             listAdapter.insert(new ListEntry(trackPoint), 0);

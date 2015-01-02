@@ -5,4 +5,5 @@ public interface Store {
     public RouteStore getRouteStore();
     public PointStore getPointStore();
     public TrackStore getTrackStore();
+    public AvailabilityStore getAvailabilityStore();
 }

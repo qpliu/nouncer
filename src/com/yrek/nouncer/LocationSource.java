@@ -3,12 +3,14 @@ package com.yrek.nouncer;
 import android.content.Context;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Point;
+import com.yrek.nouncer.processor.AvailabilityProcessor;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.store.LocationStore;
@@ -19,13 +21,15 @@ class LocationSource {
     private final LocationStore locationStore;
     private final PointStore pointStore;
     private final PointReceiver pointReceiver;
+    private final AvailabilityProcessor availabilityProcessor;
     private HandlerThread handlerThread = null;
 
-    LocationSource(Context context, LocationStore locationStore, PointStore pointStore, PointReceiver pointReceiver) {
+    LocationSource(Context context, LocationStore locationStore, PointStore pointStore, PointReceiver pointReceiver, AvailabilityProcessor availabilityProcessor) {
         this.context = context;
         this.locationStore = locationStore;
         this.pointStore = pointStore;
         this.pointReceiver = pointReceiver;
+        this.availabilityProcessor = availabilityProcessor;
     }
 
     public void start() {
@@ -146,6 +150,11 @@ class LocationSource {
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             logEvent("statusChanged"+level+":"+provider+","+status);
+            if (status == LocationProvider.AVAILABLE) {
+                availabilityProcessor.available(System.currentTimeMillis());
+            } else {
+                availabilityProcessor.unavailable(System.currentTimeMillis());
+            }
         }
 
         private void logEvent(String note) {

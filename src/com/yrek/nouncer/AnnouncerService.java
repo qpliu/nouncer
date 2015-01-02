@@ -10,12 +10,11 @@ import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Point;
 import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.db.DBStore;
+import com.yrek.nouncer.processor.AvailabilityProcessor;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
 import com.yrek.nouncer.store.Store;
-import com.yrek.nouncer.store.RouteStore;
-import com.yrek.nouncer.store.TrackStore;
 
 public class AnnouncerService extends Service {
     private Announcer announcer = null;
@@ -65,7 +64,7 @@ public class AnnouncerService extends Service {
             announcer.start();
         }
         if (locationSource == null) {
-            final RouteProcessor routeProcessor = new RouteProcessor(store.getRouteStore(), store.getTrackStore(), new RouteProcessor.Listener() {
+            final RouteProcessor routeProcessor = new RouteProcessor(store.getRouteStore(), store.getTrackStore(), store.getAvailabilityStore(), new RouteProcessor.Listener() {
                 @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
                     announcer.receiveEntry(route, startTime, routeIndex, entryTime, entryHeading, entrySpeed);
                     RouteProcessor.Listener listener = routeListener;
@@ -113,7 +112,7 @@ public class AnnouncerService extends Service {
                         e.printStackTrace();
                     }
                 }
-            });
+            }, new AvailabilityProcessor(store.getAvailabilityStore()));
             locationSource.start();
         }
         return Service.START_STICKY;
@@ -141,11 +140,7 @@ public class AnnouncerService extends Service {
         stopSelf();
     }
 
-    public TrackStore getTrackStore() {
-        return store.getTrackStore();
-    }
-
-    public RouteStore getRouteStore() {
-        return store.getRouteStore();
+    public Store getStore() {
+        return store;
     }
 }

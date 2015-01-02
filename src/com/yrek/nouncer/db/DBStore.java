@@ -22,6 +22,7 @@ import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.data.RoutePoint;
 import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.PointProcessor;
+import com.yrek.nouncer.store.AvailabilityStore;
 import com.yrek.nouncer.store.LocationStore;
 import com.yrek.nouncer.store.PointStore;
 import com.yrek.nouncer.store.RouteStore;
@@ -50,6 +51,10 @@ public class DBStore implements Store {
 
                 db.execSQL("CREATE TABLE point (latitude REAL NOT NULL, longitude REAL NOT NULL, elevation REAL, time INTEGER NOT NULL, tag TEXT)");
                 db.execSQL("CREATE INDEX point_time ON point (time)");
+
+                db.execSQL("CREATE TABLE availability (unavailable_start_time INTEGER NOT NULL, unavailable_end_time INTEGER NOT NULL)");
+                db.execSQL("CREATE INDEX availability_start ON availibility (unavailable_start_time)");
+                db.execSQL("CREATE INDEX availability_end ON availibility (unavailable_end_time)");
 
                 try {
                     insertInitialData(db, context.getResources());
@@ -422,6 +427,31 @@ public class DBStore implements Store {
     @Override
     public TrackStore getTrackStore() {
         return trackStore;
+    }
+
+    private final AvailabilityStore availabilityStore = new AvailabilityStore() {
+        @Override
+        public boolean wasUnavailable(long minTimestamp, long maxTimestamp) {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM availability WHERE unavailable_start_time < ? AND unavailable_end_time > ?", new String[] { String.valueOf(maxTimestamp), String.valueOf(minTimestamp) });
+            try {
+                return cursor.moveToNext() && cursor.getInt(0) > 0;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public void addUnavailableTime(long startTime, long endTime) {
+            ContentValues values = new ContentValues();
+            values.put("unavailable_start_time", startTime);
+            values.put("unavailable_end_time", endTime);
+            db.insert("availability", null, values);
+        }
+    };
+
+    @Override
+    public AvailabilityStore getAvailabilityStore() {
+        return availabilityStore;
     }
 
     private static long insertLocation(SQLiteDatabase db, String name, double latitude, double longitude, double elevation) {
