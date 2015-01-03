@@ -44,11 +44,22 @@ public class RouteProcessor implements PointProcessor.Listener {
             for (TrackPoint trackPoint : trackPoints) {
                 for (Iterator<PendingRoute> i = pendingRoutes.iterator(); i.hasNext(); ) {
                     PendingRoute p = i.next();
-                    if (p.index + 1 >= p.route.getRoutePointCount() || !p.route.getRoutePoint(p.index + 1).getLocation().equals(trackPoint.getLocation())) {
-                        i.remove();
-                        continue;
+                    for (;;) {
+                        if (p.index + 1 >= p.route.getRoutePointCount()) {
+                            i.remove();
+                            break;
+                        }
+                        if (p.route.getRoutePoint(p.index + 1).getLocation().equals(trackPoint.getLocation())) {
+                            p.index++;
+                            p.lastExitTime = trackPoint.getExitTime();
+                            break;
+                        }
+                        if (availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, trackPoint.getEntryTime())) {
+                            i.remove();
+                            break;
+                        }
+                        p.index++;
                     }
-                    p.index++;
                 }
                 for (Route route : routes) {
                     if (route.getRoutePoint(0).getLocation().equals(trackPoint.getLocation())) {
@@ -60,11 +71,22 @@ public class RouteProcessor implements PointProcessor.Listener {
             if (entry) {
                 for (Iterator<PendingRoute> i = pendingRoutes.iterator(); i.hasNext(); ) {
                     PendingRoute p = i.next();
-                    if (p.index + 1 >= p.route.getRoutePointCount() || !p.route.getRoutePoint(p.index + 1).getLocation().equals(location)) {
-                        i.remove();
-                        continue;
+                    for (;;) {
+                        if (p.index + 1 >= p.route.getRoutePointCount()) {
+                            i.remove();
+                            break;
+                        }
+                        if (p.route.getRoutePoint(p.index + 1).getLocation().equals(location)) {
+                            p.index++;
+                            p.lastExitTime = timestamp;
+                            break;
+                        }
+                        if (availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, timestamp)) {
+                            i.remove();
+                            break;
+                        }
+                        p.index++;
                     }
-                    p.index++;
                 }
                 for (Route route : routeStore.getRoutesStartingAt(location)) {
                     pendingRoutes.add(new PendingRoute(route, timestamp));
@@ -79,6 +101,7 @@ public class RouteProcessor implements PointProcessor.Listener {
                     if (p.index == 0) {
                         p.startTime = timestamp;
                     }
+                    p.lastExitTime = timestamp;
                 }
             }
         }
@@ -111,11 +134,13 @@ public class RouteProcessor implements PointProcessor.Listener {
         final Route route;
         long startTime;
         int index;
+        long lastExitTime;
 
         PendingRoute(Route route, long startTime) {
             this.route = route;
             this.startTime = startTime;
             this.index = 0;
+            this.lastExitTime = startTime;
         }
     }
 }

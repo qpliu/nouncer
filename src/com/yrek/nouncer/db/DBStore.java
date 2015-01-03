@@ -53,8 +53,8 @@ public class DBStore implements Store {
                 db.execSQL("CREATE INDEX point_time ON point (time)");
 
                 db.execSQL("CREATE TABLE availability (unavailable_start_time INTEGER NOT NULL, unavailable_end_time INTEGER NOT NULL)");
-                db.execSQL("CREATE INDEX availability_start ON availibility (unavailable_start_time)");
-                db.execSQL("CREATE INDEX availability_end ON availibility (unavailable_end_time)");
+                db.execSQL("CREATE INDEX availability_start ON availability (unavailable_start_time)");
+                db.execSQL("CREATE INDEX availability_end ON availability (unavailable_end_time)");
 
                 try {
                     insertInitialData(db, context.getResources());
