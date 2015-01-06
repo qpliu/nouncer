@@ -10,7 +10,7 @@ import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
 
 public abstract class Widget implements PointProcessor.Listener, PointReceiver, RouteProcessor.Listener {
-    private final Main activity;
+    protected final Main activity;
     protected final View view;
 
     protected Widget(Main activity, int id) {
@@ -20,10 +20,12 @@ public abstract class Widget implements PointProcessor.Listener, PointReceiver, 
 
     public void hide() {
         view.setVisibility(View.GONE);
+        onHide();
     }
 
     public void show() {
         view.setVisibility(View.VISIBLE);
+        onShow();
     }
 
     @Override
@@ -49,6 +51,12 @@ public abstract class Widget implements PointProcessor.Listener, PointReceiver, 
     }
 
     public void onServiceDisconnected() {
+    }
+
+    public void onHide() {
+    }
+
+    public void onShow() {
     }
 
     protected void post(Runnable runnable) {

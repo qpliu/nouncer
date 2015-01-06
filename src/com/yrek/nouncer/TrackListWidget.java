@@ -22,11 +22,11 @@ class TrackListWidget extends Widget {
 
     TrackListWidget(final Main activity, int id) {
         super(activity, id);
-        this.listAdapter = new ArrayAdapter<ListEntry>(activity, R.layout.track_entry) {
+        this.listAdapter = new ArrayAdapter<ListEntry>(activity, R.layout.track_list_entry) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
-                    convertView = activity.getLayoutInflater().inflate(R.layout.track_entry, parent, false);
+                    convertView = activity.getLayoutInflater().inflate(R.layout.track_list_entry, parent, false);
                 }
                 getItem(position).display(convertView, this, position);
                 return convertView;
@@ -69,11 +69,16 @@ class TrackListWidget extends Widget {
         this.announcerService = null;
     }
 
+    @Override
+    public void onShow() {
+        fillList(System.currentTimeMillis());
+    }
+
     private void fillList(long timestamp) {
         listAdapter.clear();
         RouteProcessor routeProcessor = new RouteProcessor(announcerService.getStore().getRouteStore(), null, announcerService.getStore().getAvailabilityStore(), new RouteProcessor.Listener() {
             @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
-                if (routeIndex + 1 >= route.getRoutePointCount()) {
+                if (route.isStarred() && routeIndex + 1 >= route.getRoutePointCount()) {
                     listAdapter.insert(new ListEntry(route, startTime, entryTime), 0);
                 }
             }

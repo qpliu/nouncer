@@ -133,6 +133,20 @@ public class DBStore implements Store {
 
     private final RouteStore routeStore = new RouteStore() {
         @Override
+        public Collection<Route> getRoutes() {
+            ArrayList<Route> list = new ArrayList<Route>();
+            Cursor cursor = db.rawQuery("SELECT id, name FROM route WHERE hidden = 0", null);
+            try {
+                while (cursor.moveToNext()) {
+                    list.add(new DBRoute(cursor));
+                }
+            } finally {
+                cursor.close();
+            }
+            return list;
+        }
+
+        @Override
         public Collection<Route> getRoutes(Location location) {
             long locationId = ((DBLocation) location).id;
             ArrayList<Route> list = new ArrayList<Route>();
@@ -354,7 +368,7 @@ public class DBStore implements Store {
         @Override
         public boolean addExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
             long id = 0L;
-            Cursor cursor = db.rawQuery("SELECT id, location_id FROM track ORDER BY entry_time DESC", new String[] {});
+            Cursor cursor = db.rawQuery("SELECT id, location_id FROM track ORDER BY entry_time DESC", null);
             try {
                 if (cursor.moveToNext() && ((DBLocation) location).id == cursor.getLong(1)) {
                     id = cursor.getLong(0);
