@@ -1,26 +1,29 @@
 package com.yrek.nouncer;
 
-import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
 class StartStopWidget extends Widget {
+    private final View startButton;
+    private final View stopButton;
     private final View serviceRunning;
     private final View serviceNotRunning;
     private AnnouncerService announcerService = null;
 
-    StartStopWidget(final Context context, View view) {
-        super(view);
+    StartStopWidget(final Main activity, int id) {
+        super(activity, id);
+        this.startButton = view.findViewById(R.id.start_button);
+        this.stopButton = view.findViewById(R.id.stop_button);
         this.serviceRunning = view.findViewById(R.id.service_running);
         this.serviceNotRunning = view.findViewById(R.id.service_not_running);
         showNothing.run();
-        view.findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
+        startButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                context.startService(new Intent(context, AnnouncerService.class));
+                activity.startService(new Intent(activity, AnnouncerService.class));
                 showRunning.run();
             }
         });
-        view.findViewById(R.id.stop_button).setOnClickListener(new View.OnClickListener() {
+        stopButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 AnnouncerService announcerService = StartStopWidget.this.announcerService;
                 if (announcerService != null) {
@@ -33,6 +36,8 @@ class StartStopWidget extends Widget {
 
     private final Runnable showRunning = new Runnable() {
         @Override public void run() {
+            startButton.setEnabled(false);
+            stopButton.setEnabled(true);
             serviceRunning.setVisibility(View.VISIBLE);
             serviceNotRunning.setVisibility(View.GONE);
         }
@@ -40,6 +45,8 @@ class StartStopWidget extends Widget {
 
     private final Runnable showNotRunning = new Runnable() {
         @Override public void run() {
+            startButton.setEnabled(true);
+            stopButton.setEnabled(false);
             serviceRunning.setVisibility(View.GONE);
             serviceNotRunning.setVisibility(View.VISIBLE);
         }
@@ -47,6 +54,8 @@ class StartStopWidget extends Widget {
 
     private final Runnable showNothing = new Runnable() {
         @Override public void run() {
+            startButton.setEnabled(false);
+            stopButton.setEnabled(false);
             serviceRunning.setVisibility(View.GONE);
             serviceNotRunning.setVisibility(View.GONE);
         }

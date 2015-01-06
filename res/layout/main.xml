@@ -6,6 +6,10 @@
    android:layout_height="fill_parent"
    >
   <include
+     layout="@layout/tabs_widget"
+     android:id="@+id/tabs_widget"
+     />
+  <include
      layout="@layout/start_stop_widget"
      android:id="@+id/start_stop_widget"
      />
@@ -15,6 +19,31 @@
      />
   <include
      layout="@layout/track_list_widget"
-     android:id="@+id/track_list"
+     android:id="@+id/track_list_widget"
+     />
+  <include
+     layout="@layout/route_list_widget"
+     android:id="@+id/route_list_widget"
+     android:visibility="gone"
+     />
+  <include
+     layout="@layout/route_widget"
+     android:id="@+id/route_widget"
+     android:visibility="gone"
+     />
+  <include
+     layout="@layout/location_widget"
+     android:id="@+id/location_widget"
+     android:visibility="gone"
+     />
+  <include
+     layout="@layout/add_route_widget"
+     android:id="@+id/add_route_widget"
+     android:visibility="gone"
+     />
+  <include
+     layout="@layout/add_location_widget"
+     android:id="@+id/add_location_widget"
+     android:visibility="gone"
      />
 </LinearLayout>

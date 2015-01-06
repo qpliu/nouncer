@@ -21,6 +21,11 @@ import com.yrek.nouncer.processor.RouteProcessor;
 public class Main extends Activity {
     private final ArrayList<Widget> widgets = new ArrayList<Widget>();
     private AnnouncerServiceConnection serviceConnection;
+    TabsWidget tabsWidget;
+    StartStopWidget startStopWidget;
+    StatusWidget statusWidget;
+    TrackListWidget trackListWidget;
+    RouteListWidget routeListWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,12 +33,14 @@ public class Main extends Activity {
         setContentView(R.layout.main);
 
         widgets.clear();
-        addWidget(new StartStopWidget(this, findViewById(R.id.start_stop_widget)));
-        addWidget(new StatusWidget(findViewById(R.id.status_widget)));
-        addWidget(new TrackListWidget(getWindow(), findViewById(R.id.track_list)));
+        this.tabsWidget = addWidget(new TabsWidget(this, R.id.tabs_widget));
+        this.startStopWidget = addWidget(new StartStopWidget(this, R.id.start_stop_widget));
+        this.statusWidget = addWidget(new StatusWidget(this, R.id.status_widget));
+        this.trackListWidget = addWidget(new TrackListWidget(this, R.id.track_list_widget));
+        this.routeListWidget = addWidget(new RouteListWidget(this, R.id.route_list));
     }
 
-    private Widget addWidget(Widget widget) {
+    private <W extends Widget> W addWidget(W widget) {
         widgets.add(widget);
         return widget;
     }

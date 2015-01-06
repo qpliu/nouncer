@@ -5,7 +5,6 @@ import java.util.List;
 
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -21,13 +20,13 @@ class TrackListWidget extends Widget {
     private final ArrayAdapter<ListEntry> listAdapter;
     private static final long MAX_AGE = 12L*3600L*1000L;
 
-    TrackListWidget(final Window window, View view) {
-        super(view);
-        this.listAdapter = new ArrayAdapter<ListEntry>(window.getContext(), R.layout.track_entry) {
+    TrackListWidget(final Main activity, int id) {
+        super(activity, id);
+        this.listAdapter = new ArrayAdapter<ListEntry>(activity, R.layout.track_entry) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
-                    convertView = window.getLayoutInflater().inflate(R.layout.track_entry, parent, false);
+                    convertView = activity.getLayoutInflater().inflate(R.layout.track_entry, parent, false);
                 }
                 getItem(position).display(convertView, this, position);
                 return convertView;

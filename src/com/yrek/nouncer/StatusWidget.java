@@ -13,8 +13,8 @@ class StatusWidget extends Widget {
     private final TextView locationText;
     private final TextView pointText;
 
-    StatusWidget(View view) {
-        super(view);
+    StatusWidget(Main activity, int id) {
+        super(activity, id);
         this.routeText = (TextView) view.findViewById(R.id.route_text);
         this.locationText = (TextView) view.findViewById(R.id.location_text);
         this.pointText = (TextView) view.findViewById(R.id.point_text);

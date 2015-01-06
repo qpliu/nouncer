@@ -10,10 +10,12 @@ import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
 
 public abstract class Widget implements PointProcessor.Listener, PointReceiver, RouteProcessor.Listener {
-    private final View view;
+    private final Main activity;
+    protected final View view;
 
-    protected Widget(View view) {
-        this.view = view;
+    protected Widget(Main activity, int id) {
+        this.activity = activity;
+        this.view = activity.findViewById(id);
     }
 
     public void hide() {
