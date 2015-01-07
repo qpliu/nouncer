@@ -28,11 +28,29 @@ class RouteListWidget extends Widget {
         };
 
         ((ListView) view.findViewById(R.id.route_list)).setAdapter(listAdapter);
+
+        view.findViewById(R.id.restrict_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                if (store != null) {
+                    store.getRouteStore().hideNonstarred();
+                    fillList();
+                }
+            }
+        });
+        view.findViewById(R.id.unrestrict_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                if (store != null) {
+                    store.getRouteStore().unhideAll();
+                    fillList();
+                }
+            }
+        });
     }
 
     private void renderEntry(View view, final Route item) {
         TextView textView = (TextView) view.findViewById(R.id.name);
         textView.setText(item.getName());
+        textView.setEnabled(!item.isHidden());
         //... textView onClick -> activity.routeWidget.setRoute(item); activity.tabsWidget.show(activity.tabsWidget, activity.routeWidget);
         final CheckBox checkBox = (CheckBox) view.findViewById(R.id.starred_checkbox);
         checkBox.setChecked(item.isStarred());
@@ -44,8 +62,10 @@ class RouteListWidget extends Widget {
     }
 
     private void fillList() {
-        listAdapter.clear();
-        listAdapter.addAll(store.getRouteStore().getRoutes());
+        if (store != null) {
+            listAdapter.clear();
+            listAdapter.addAll(store.getRouteStore().getRoutes());
+        }
     }
 
     @Override

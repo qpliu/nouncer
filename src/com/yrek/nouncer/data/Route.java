@@ -9,4 +9,5 @@ public interface Route {
     public List<RoutePoint> getRoutePoints();
     public boolean isStarred();
     public void setStarred(boolean starred);
+    public boolean isHidden();
 }

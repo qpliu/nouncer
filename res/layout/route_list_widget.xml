@@ -19,14 +19,14 @@
     <Button
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:id="@+id/suppress_nonstarred"
-       android:text="Suppress nonstarred"
+       android:id="@+id/restrict_button"
+       android:text="Restrict\nannouncements\nto starred routes"
        />
     <Button
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:id="@+id/unsuppress_all"
-       android:text="Unsuppress all"
+       android:id="@+id/unrestrict_button"
+       android:text="Announce\nall routes"
        />
   </LinearLayout>
   <ListView

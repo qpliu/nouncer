@@ -34,6 +34,9 @@ public class DBStore implements Store {
     private static final boolean STORE_POINTS = true;
 
     private final SQLiteDatabase db;
+    private final HashMap<Long,Boolean> locationHiddenCache = new HashMap<Long,Boolean>();
+    private final HashMap<Long,Boolean> routeHiddenCache = new HashMap<Long,Boolean>();
+    private final HashMap<Long,Boolean> routeStarredCache = new HashMap<Long,Boolean>();
 
     public DBStore(final Context context) {
         this.db = new SQLiteOpenHelper(context, getClass().getName(), null, SCHEMA_VERSION) {
@@ -120,6 +123,26 @@ public class DBStore implements Store {
             return elevation;
         }
 
+        @Override
+        public boolean isHidden() {
+            synchronized (locationHiddenCache) {
+                if (locationHiddenCache.containsKey(id)) {
+                    return locationHiddenCache.get(id);
+                }
+            }
+            Cursor c = db.rawQuery("SELECT hidden FROM location WHERE id = ?", new String[] { String.valueOf(id) });
+            boolean hidden = false;
+            try {
+                hidden = c.moveToNext() && c.getInt(0) != 0;
+            } finally {
+                c.close();
+            }
+            synchronized (locationHiddenCache) {
+                locationHiddenCache.put(id, hidden);
+            }
+            return hidden;
+        }
+
         @Override 
         public boolean equals(Object o) {
             return o instanceof DBLocation && ((DBLocation) o).id == id;
@@ -135,7 +158,7 @@ public class DBStore implements Store {
         @Override
         public Collection<Route> getRoutes() {
             ArrayList<Route> list = new ArrayList<Route>();
-            Cursor cursor = db.rawQuery("SELECT id, name FROM route WHERE hidden = 0", null);
+            Cursor cursor = db.rawQuery("SELECT id, name FROM route", null);
             try {
                 while (cursor.moveToNext()) {
                     list.add(new DBRoute(cursor));
@@ -175,9 +198,46 @@ public class DBStore implements Store {
             }
             return list;
         }
+
+        @Override
+        public void hideNonstarred() {
+            db.beginTransaction();
+            try {
+                db.execSQL("UPDATE route SET hidden = 0");
+                db.execSQL("UPDATE location SET hidden = 0");
+                db.execSQL("UPDATE route SET hidden = 1 WHERE starred = 0");
+                db.execSQL("UPDATE location SET hidden = 1 WHERE id NOT IN (SELECT location_id FROM route, route_point WHERE route_id = route.id AND location.id = location_id AND hidden = 0)");
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+            synchronized (locationHiddenCache) {
+                locationHiddenCache.clear();
+            }
+            synchronized (routeHiddenCache) {
+                routeHiddenCache.clear();
+            }
+        }
+
+        @Override
+        public void unhideAll() {
+            db.beginTransaction();
+            try {
+                db.execSQL("UPDATE location SET hidden = 0");
+                db.execSQL("UPDATE route SET hidden = 0");
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+            synchronized (locationHiddenCache) {
+                locationHiddenCache.clear();
+            }
+            synchronized (routeHiddenCache) {
+                routeHiddenCache.clear();
+            }
+        }
     };
 
-    private HashMap<Long,Boolean> starredCache = new HashMap<Long,Boolean>();
 
     private class DBRoute implements Route {
         private final long id;
@@ -220,9 +280,9 @@ public class DBStore implements Store {
 
         @Override
         public boolean isStarred() {
-            synchronized (starredCache) {
-                if (starredCache.containsKey(id)) {
-                    return starredCache.get(id);
+            synchronized (routeStarredCache) {
+                if (routeStarredCache.containsKey(id)) {
+                    return routeStarredCache.get(id);
                 }
             }
             Cursor c = db.rawQuery("SELECT starred FROM route WHERE id = ?", new String[] { String.valueOf(id) });
@@ -232,8 +292,8 @@ public class DBStore implements Store {
             } finally {
                 c.close();
             }
-            synchronized (starredCache) {
-                starredCache.put(id, starred);
+            synchronized (routeStarredCache) {
+                routeStarredCache.put(id, starred);
             }
             return starred;
         }
@@ -243,9 +303,29 @@ public class DBStore implements Store {
             ContentValues values = new ContentValues();
             values.put("starred", starred ? 1 : 0);
             db.update("route", values, "id = ?", new String[] { String.valueOf(id) });
-            synchronized (starredCache) {
-                starredCache.put(id, starred);
+            synchronized (routeStarredCache) {
+                routeStarredCache.put(id, starred);
             }
+        }
+
+        @Override
+        public boolean isHidden() {
+            synchronized (routeHiddenCache) {
+                if (routeHiddenCache.containsKey(id)) {
+                    return routeHiddenCache.get(id);
+                }
+            }
+            Cursor c = db.rawQuery("SELECT hidden FROM route WHERE id = ?", new String[] { String.valueOf(id) });
+            boolean hidden = false;
+            try {
+                hidden = c.moveToNext() && c.getInt(0) != 0;
+            } finally {
+                c.close();
+            }
+            synchronized (routeHiddenCache) {
+                routeHiddenCache.put(id, hidden);
+            }
+            return hidden;
         }
     }
 

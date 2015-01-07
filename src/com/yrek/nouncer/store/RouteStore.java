@@ -9,4 +9,6 @@ public interface RouteStore {
     public Collection<Route> getRoutes();
     public Collection<Route> getRoutes(Location location);
     public Collection<Route> getRoutesStartingAt(Location location);
+    public void hideNonstarred();
+    public void unhideAll();
 }

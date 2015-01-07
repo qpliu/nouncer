@@ -5,4 +5,5 @@ public interface Location {
     public double getLatitude();
     public double getLongitude();
     public double getElevation();
+    public boolean isHidden();
 }

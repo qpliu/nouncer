@@ -88,6 +88,9 @@ class TrackListWidget extends Widget {
         List<TrackPoint> trackPoints = announcerService.getStore().getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
         Collections.reverse(trackPoints);
         for (TrackPoint trackPoint : trackPoints) {
+            if (trackPoint.getLocation().isHidden()) {
+                continue;
+            }
             listAdapter.insert(new ListEntry(trackPoint), 0);
             routeProcessor.receiveEntry(trackPoint.getLocation(), trackPoint.getEntryTime(), trackPoint.getEntryHeading(), trackPoint.getEntrySpeed(), trackPoint.getEntryTime());
             routeProcessor.receiveExit(trackPoint.getLocation(), trackPoint.getExitTime(), trackPoint.getExitHeading(), trackPoint.getExitSpeed(), trackPoint.getExitTime());
