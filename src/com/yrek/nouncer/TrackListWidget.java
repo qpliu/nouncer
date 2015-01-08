@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ class TrackListWidget extends Widget {
         };
 
         ((ListView) view).setAdapter(listAdapter);
+        ((ListView) view).setOnItemClickListener(listItemClickListener);
     }
 
     @Override
@@ -150,7 +152,20 @@ class TrackListWidget extends Widget {
                 ((TextView) view.findViewById(R.id.route_time)).setText(String.format("%d:%02d", dt / 60000L, dt % 60000L / 1000L));
             }
         }
+
+        void onClick() {
+            if (route != null) {
+                activity.routeWidget.show(route);
+            }
+        }
     }
+
+    private final AdapterView.OnItemClickListener listItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            listAdapter.getItem(position).onClick();
+        }
+    };
 
     static String headingName(double heading) {
         if (heading < -157.5 || heading > 157.5) {
