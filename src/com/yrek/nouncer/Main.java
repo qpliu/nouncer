@@ -19,13 +19,14 @@ import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
 
 public class Main extends Activity {
-    final ArrayList<Widget> widgets = new ArrayList<Widget>();
+    private final ArrayList<Widget> widgets = new ArrayList<Widget>();
     private AnnouncerServiceConnection serviceConnection;
     TabsWidget tabsWidget;
     StartStopWidget startStopWidget;
     StatusWidget statusWidget;
     TrackListWidget trackListWidget;
     RouteListWidget routeListWidget;
+    RouteWidget routeWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +39,21 @@ public class Main extends Activity {
         this.statusWidget = addWidget(new StatusWidget(this, R.id.status_widget));
         this.trackListWidget = addWidget(new TrackListWidget(this, R.id.track_list_widget));
         this.routeListWidget = addWidget(new RouteListWidget(this, R.id.route_list_widget));
+        this.routeWidget = addWidget(new RouteWidget(this, R.id.route_widget));
     }
 
     private <W extends Widget> W addWidget(W widget) {
         widgets.add(widget);
         return widget;
+    }
+
+    void show(Widget... widgets) {
+        for (Widget w : this.widgets) {
+            w.hide();
+        }
+        for (Widget w : widgets) {
+            w.show();
+        }
     }
 
     @Override

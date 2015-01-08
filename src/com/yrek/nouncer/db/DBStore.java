@@ -173,7 +173,7 @@ public class DBStore implements Store {
         public Collection<Route> getRoutes(Location location) {
             long locationId = ((DBLocation) location).id;
             ArrayList<Route> list = new ArrayList<Route>();
-            Cursor cursor = db.rawQuery("SELECT id, name FROM route WHERE hidden = 0 AND ? IN (SELECT location_id FROM route_point WHERE route_id = id)", new String[] { String.valueOf(locationId) });
+            Cursor cursor = db.rawQuery("SELECT id, name FROM route WHERE ? IN (SELECT location_id FROM route_point WHERE route_id = id)", new String[] { String.valueOf(locationId) });
             try {
                 while (cursor.moveToNext()) {
                     list.add(new DBRoute(cursor));
@@ -188,7 +188,7 @@ public class DBStore implements Store {
         public Collection<Route> getRoutesStartingAt(Location location) {
             long locationId = ((DBLocation) location).id;
             ArrayList<Route> list = new ArrayList<Route>();
-            Cursor cursor = db.rawQuery("SELECT id, name FROM route, route_point WHERE hidden = 0 AND location_id = ? AND route_id = id AND route_index = 0", new String[] { String.valueOf(locationId) });
+            Cursor cursor = db.rawQuery("SELECT id, name FROM route, route_point WHERE location_id = ? AND route_id = id AND route_index = 0", new String[] { String.valueOf(locationId) });
             try {
                 while (cursor.moveToNext()) {
                     list.add(new DBRoute(cursor));
@@ -326,6 +326,11 @@ public class DBStore implements Store {
                 routeHiddenCache.put(id, hidden);
             }
             return hidden;
+        }
+
+        @Override 
+        public boolean equals(Object o) {
+            return o instanceof DBRoute && ((DBRoute) o).id == id;
         }
     }
 

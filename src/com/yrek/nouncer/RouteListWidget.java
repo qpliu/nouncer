@@ -2,6 +2,7 @@ package com.yrek.nouncer;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
@@ -28,6 +29,7 @@ class RouteListWidget extends Widget {
         };
 
         ((ListView) view.findViewById(R.id.route_list)).setAdapter(listAdapter);
+        ((ListView) view.findViewById(R.id.route_list)).setOnItemClickListener(listItemClickListener);
 
         view.findViewById(R.id.restrict_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
@@ -47,11 +49,17 @@ class RouteListWidget extends Widget {
         });
     }
 
+    private final AdapterView.OnItemClickListener listItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            activity.routeWidget.show(listAdapter.getItem(position));
+        }
+    };
+
     private void renderEntry(View view, final Route item) {
         TextView textView = (TextView) view.findViewById(R.id.name);
         textView.setText(item.getName());
         textView.setEnabled(!item.isHidden());
-        //... textView onClick -> activity.routeWidget.setRoute(item); activity.tabsWidget.show(activity.tabsWidget, activity.routeWidget);
         final CheckBox checkBox = (CheckBox) view.findViewById(R.id.starred_checkbox);
         checkBox.setChecked(item.isStarred());
         checkBox.setOnClickListener(new View.OnClickListener() {

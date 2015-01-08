@@ -20,7 +20,7 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/restrict_button"
-       android:text="Restrict\nannouncements\nto starred routes"
+       android:text="Announce\nonly selected\nroutes"
        />
     <Button
        android:layout_width="wrap_content"
