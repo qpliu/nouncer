@@ -156,6 +156,8 @@ class TrackListWidget extends Widget {
         void onClick() {
             if (route != null) {
                 activity.routeWidget.show(route);
+            } else {
+                activity.locationWidget.show(trackPoint.getLocation());
             }
         }
     }

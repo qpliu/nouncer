@@ -5,19 +5,9 @@
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
    >
-  <TextView
-     android:layout_width="fill_parent"
-     android:layout_height="wrap_content"
-     android:id="@+id/name"
-     />
-  <ListView
-     android:layout_width="fill_parent"
-     android:layout_height="wrap_content"
-     android:id="@+id/route_point_list"
-     />
   <ListView
      android:layout_width="fill_parent"
      android:layout_height="fill_parent"
-     android:id="@+id/track_list"
+     android:id="@+id/location_list"
      />
 </LinearLayout>

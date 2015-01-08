@@ -32,6 +32,11 @@
      android:visibility="gone"
      />
   <include
+     layout="@layout/location_list_widget"
+     android:id="@+id/location_list_widget"
+     android:visibility="gone"
+     />
+  <include
      layout="@layout/location_widget"
      android:id="@+id/location_widget"
      android:visibility="gone"

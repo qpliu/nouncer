@@ -20,6 +20,9 @@ class TabsWidget extends Widget {
             case R.id.routes:
                 activity.show(activity.tabsWidget, activity.routeListWidget);
                 break;
+            case R.id.locations:
+                activity.show(activity.tabsWidget, activity.locationListWidget);
+                break;
             default:
                 break;
             }

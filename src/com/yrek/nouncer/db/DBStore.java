@@ -73,10 +73,29 @@ public class DBStore implements Store {
     private final LocationStore locationStore = new LocationStore() {
         @Override
         public Collection<Location> getLocations(double latitude, double longitude, double radius) {
+            return getLocations(latitude, longitude, radius, false);
+        }
+
+        @Override
+        public Collection<Location> getLocations(double latitude, double longitude, double radius, boolean includeHidden) {
             ArrayList<Location> list = new ArrayList<Location>();
             double dlat = PointProcessor.dlat(radius);
             double dlon = PointProcessor.dlon(latitude, radius);
-            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE hidden = 0 AND latitude >= ? AND latitude <= ? AND ((longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?))", new String[] { String.valueOf(latitude - dlat),  String.valueOf(latitude + dlat), String.valueOf(longitude - dlon), String.valueOf(longitude + dlon), String.valueOf(longitude - dlon + 180.0), String.valueOf(longitude + dlon + 180.0), String.valueOf(longitude - dlon - 180.0), String.valueOf(longitude + dlon - 180.0) });
+            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE " + (includeHidden ? "" : "hidden = 0 AND ") + "latitude >= ? AND latitude <= ? AND ((longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?))", new String[] { String.valueOf(latitude - dlat),  String.valueOf(latitude + dlat), String.valueOf(longitude - dlon), String.valueOf(longitude + dlon), String.valueOf(longitude - dlon + 180.0), String.valueOf(longitude + dlon + 180.0), String.valueOf(longitude - dlon - 180.0), String.valueOf(longitude + dlon - 180.0) });
+            try {
+                while (cursor.moveToNext()) {
+                    list.add(new DBLocation(cursor, 0));
+                }
+            } finally {
+                cursor.close();
+            }
+            return list;
+        }
+
+        @Override
+        public Collection<Location> getLocations(boolean includeHidden) {
+            ArrayList<Location> list = new ArrayList<Location>();
+            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location" + (includeHidden ? "" : " WHERE hidden = 0"), null);
             try {
                 while (cursor.moveToNext()) {
                     list.add(new DBLocation(cursor, 0));

@@ -27,6 +27,8 @@ public class Main extends Activity {
     TrackListWidget trackListWidget;
     RouteListWidget routeListWidget;
     RouteWidget routeWidget;
+    LocationListWidget locationListWidget;
+    LocationWidget locationWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,8 @@ public class Main extends Activity {
         this.trackListWidget = addWidget(new TrackListWidget(this, R.id.track_list_widget));
         this.routeListWidget = addWidget(new RouteListWidget(this, R.id.route_list_widget));
         this.routeWidget = addWidget(new RouteWidget(this, R.id.route_widget));
+        this.locationListWidget = addWidget(new LocationListWidget(this, R.id.location_list_widget));
+        this.locationWidget = addWidget(new LocationWidget(this, R.id.location_widget));
     }
 
     private <W extends Widget> W addWidget(W widget) {

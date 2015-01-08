@@ -39,6 +39,7 @@ class RouteWidget extends Widget {
             }
         };
         ((ListView) view.findViewById(R.id.route_point_list)).setAdapter(routePointAdapter);
+        ((ListView) view.findViewById(R.id.route_point_list)).setOnItemClickListener(routePointEntryClickListener);
         this.trackAdapter = new ArrayAdapter<TrackEntry>(activity, R.layout.track_list_entry) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -56,6 +57,13 @@ class RouteWidget extends Widget {
     private void renderEntry(View view, RoutePoint item) {
         ((TextView) view.findViewById(R.id.name)).setText(item.getLocation().getName());
     }
+
+    private final AdapterView.OnItemClickListener routePointEntryClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            activity.locationWidget.show(routePointAdapter.getItem(position).getLocation());
+        }
+    };
 
     private class TrackEntry {
         private final TrackPoint trackPoint;

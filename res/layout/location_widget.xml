@@ -5,4 +5,50 @@
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
    >
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/name"
+     />
+  <LinearLayout
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content"
+     >
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/latitude"
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=","
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/longitude"
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=" ("
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/elevation"
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text=")"
+       />
+  </LinearLayout>
+  <ListView
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent"
+     android:id="@+id/route_list"
+     />
 </LinearLayout>
