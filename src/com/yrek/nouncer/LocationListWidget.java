@@ -30,6 +30,11 @@ class LocationListWidget extends Widget {
 
         ((ListView) view.findViewById(R.id.location_list)).setAdapter(listAdapter);
         ((ListView) view.findViewById(R.id.location_list)).setOnItemClickListener(listItemClickListener);
+        view.findViewById(R.id.add_location_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                activity.show(activity.tabsWidget, activity.addLocationWidget);
+            }
+        });
     }
 
     private final AdapterView.OnItemClickListener listItemClickListener = new AdapterView.OnItemClickListener() {

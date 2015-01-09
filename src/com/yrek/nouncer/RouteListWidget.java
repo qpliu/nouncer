@@ -31,23 +31,31 @@ class RouteListWidget extends Widget {
         ((ListView) view.findViewById(R.id.route_list)).setAdapter(listAdapter);
         ((ListView) view.findViewById(R.id.route_list)).setOnItemClickListener(listItemClickListener);
 
-        view.findViewById(R.id.restrict_button).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                if (store != null) {
-                    store.getRouteStore().hideNonstarred();
-                    fillList();
-                }
-            }
-        });
-        view.findViewById(R.id.unrestrict_button).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                if (store != null) {
-                    store.getRouteStore().unhideAll();
-                    fillList();
-                }
-            }
-        });
+        view.findViewById(R.id.add_route_button).setOnClickListener(buttonClickListener);
+        view.findViewById(R.id.restrict_button).setOnClickListener(buttonClickListener);
+        view.findViewById(R.id.unrestrict_button).setOnClickListener(buttonClickListener);
     }
+
+    private final View.OnClickListener buttonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+            case R.id.add_route_button:
+                activity.show(activity.tabsWidget, activity.addRouteWidget);
+                break;
+            case R.id.restrict_button:
+                store.getRouteStore().hideNonstarred();
+                fillList();
+                break;
+            case R.id.unrestrict_button:
+                store.getRouteStore().unhideAll();
+                fillList();
+                break;
+            default:
+                break;
+            }
+        }
+    };
 
     private final AdapterView.OnItemClickListener listItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
