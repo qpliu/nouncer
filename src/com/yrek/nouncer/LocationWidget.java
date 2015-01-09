@@ -34,6 +34,12 @@ class LocationWidget extends Widget {
         };
         ((ListView) view.findViewById(R.id.route_list)).setAdapter(routeAdapter);
         ((ListView) view.findViewById(R.id.route_list)).setOnItemClickListener(itemClickListener);
+
+        view.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                activity.notificationWidget.show("Not implemented");
+            }
+        });
     }
 
     private void renderEntry(View view, Route item) {
@@ -63,5 +69,6 @@ class LocationWidget extends Widget {
         if (store != null) {
             routeAdapter.addAll(store.getRouteStore().getRoutes(location));
         }
+        view.findViewById(R.id.delete_button).setEnabled(routeAdapter.getCount() == 0);
     }
 }

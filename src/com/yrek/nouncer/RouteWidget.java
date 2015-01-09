@@ -52,6 +52,12 @@ class RouteWidget extends Widget {
         };
         ((ListView) view.findViewById(R.id.track_list)).setAdapter(trackAdapter);
         ((ListView) view.findViewById(R.id.track_list)).setOnItemClickListener(trackEntryClickListener);
+
+        view.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                activity.notificationWidget.show("Not implemented");
+            }
+        });
     }
 
     private void renderEntry(View view, RoutePoint item) {

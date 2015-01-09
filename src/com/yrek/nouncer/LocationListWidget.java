@@ -21,7 +21,7 @@ class LocationListWidget extends Widget {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
-                    convertView = activity.getLayoutInflater().inflate(R.layout.route_list_entry, parent, false);
+                    convertView = activity.getLayoutInflater().inflate(R.layout.location_list_entry, parent, false);
                 }
                 renderEntry(convertView, getItem(position));
                 return convertView;
@@ -32,7 +32,15 @@ class LocationListWidget extends Widget {
         ((ListView) view.findViewById(R.id.location_list)).setOnItemClickListener(listItemClickListener);
         view.findViewById(R.id.add_location_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                activity.show(activity.tabsWidget, activity.addLocationWidget);
+                activity.addLocationWidget.show(new AddLocationWidget.OnFinish() {
+                    @Override public void onFinish(Location location) {
+                        if (location == null) {
+                            activity.show(activity.tabsWidget, activity.locationListWidget);
+                        } else {
+                            activity.locationWidget.show(location);
+                        }
+                    }
+                });
             }
         });
     }
@@ -45,7 +53,7 @@ class LocationListWidget extends Widget {
     };
 
     private void renderEntry(View view, final Location item) {
-        TextView textView = (TextView) view.findViewById(R.id.name);
+        TextView textView = (TextView) view;
         textView.setText(item.getName());
         textView.setEnabled(!item.isHidden());
     }

@@ -10,6 +10,11 @@
      android:id="@+id/tabs_widget"
      />
   <include
+     layout="@layout/notification_widget"
+     android:id="@+id/notification_widget"
+     android:visibility="gone"
+     />
+  <include
      layout="@layout/start_stop_widget"
      android:id="@+id/start_stop_widget"
      />

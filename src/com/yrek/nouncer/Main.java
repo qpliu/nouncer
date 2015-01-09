@@ -31,6 +31,7 @@ public class Main extends Activity {
     LocationListWidget locationListWidget;
     LocationWidget locationWidget;
     AddLocationWidget addLocationWidget;
+    NotificationWidget notificationWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,7 @@ public class Main extends Activity {
         this.locationListWidget = addWidget(new LocationListWidget(this, R.id.location_list_widget));
         this.locationWidget = addWidget(new LocationWidget(this, R.id.location_widget));
         this.addLocationWidget = addWidget(new AddLocationWidget(this, R.id.add_location_widget));
+        this.notificationWidget = addWidget(new NotificationWidget(this, R.id.notification_widget));
     }
 
     private <W extends Widget> W addWidget(W widget) {

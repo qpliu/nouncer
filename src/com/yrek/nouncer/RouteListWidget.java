@@ -41,7 +41,15 @@ class RouteListWidget extends Widget {
         public void onClick(View v) {
             switch (v.getId()) {
             case R.id.add_route_button:
-                activity.show(activity.tabsWidget, activity.addRouteWidget);
+                activity.addRouteWidget.show(new AddRouteWidget.OnFinish() {
+                    @Override public void onFinish(Route route) {
+                        if (route == null) {
+                            activity.show(activity.tabsWidget, activity.routeListWidget);
+                        } else {
+                            activity.routeWidget.show(route);
+                        }
+                    }
+                });
                 break;
             case R.id.restrict_button:
                 store.getRouteStore().hideNonstarred();
