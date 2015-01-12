@@ -47,7 +47,7 @@ public abstract class Widget implements PointProcessor.Listener, PointReceiver, 
     public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed) {
     }
 
-    public void onServiceConnected(AnnouncerService announcerService) {
+    public void onServiceConnected() {
     }
 
     public void onServiceDisconnected() {

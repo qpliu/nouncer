@@ -105,6 +105,18 @@ public class DBStore implements Store {
             }
             return list;
         }
+
+        @Override
+        public Location addLocation(String name, double latitude, double longitude, double elevation) {
+            long id = insertLocation(db, name, latitude, longitude, elevation);
+            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE id = ?", new String[] { String.valueOf(id) });
+            try {
+                cursor.moveToNext();
+                return new DBLocation(cursor, 0);
+            } finally {
+                cursor.close();
+            }
+        }
     };
 
     private class DBLocation implements Location {
@@ -160,6 +172,11 @@ public class DBStore implements Store {
                 locationHiddenCache.put(id, hidden);
             }
             return hidden;
+        }
+
+        @Override
+        public void delete() {
+            db.delete("location", "id = ?", new String[] { String.valueOf(id) });
         }
 
         @Override 

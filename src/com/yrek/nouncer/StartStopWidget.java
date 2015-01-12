@@ -8,7 +8,6 @@ class StartStopWidget extends Widget {
     private final View stopButton;
     private final View serviceRunning;
     private final View serviceNotRunning;
-    private AnnouncerService announcerService = null;
 
     StartStopWidget(final Main activity, int id) {
         super(activity, id);
@@ -25,7 +24,7 @@ class StartStopWidget extends Widget {
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                AnnouncerService announcerService = StartStopWidget.this.announcerService;
+                AnnouncerService announcerService = activity.announcerService;
                 if (announcerService != null) {
                     announcerService.stop();
                 }
@@ -62,14 +61,12 @@ class StartStopWidget extends Widget {
     };
 
     @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        this.announcerService = announcerService;
-        post(announcerService.isStarted() ? showRunning : showNotRunning);
+    public void onServiceConnected() {
+        post(activity.announcerService.isStarted() ? showRunning : showNotRunning);
     }
 
     @Override
     public void onServiceDisconnected() {
-        this.announcerService = null;
         post(showNothing);
     }
 }

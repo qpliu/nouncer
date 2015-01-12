@@ -6,4 +6,5 @@ public interface Location {
     public double getLongitude();
     public double getElevation();
     public boolean isHidden();
+    public void delete();
 }

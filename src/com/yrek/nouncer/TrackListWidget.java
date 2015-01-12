@@ -17,7 +17,6 @@ import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.RouteProcessor;
 
 class TrackListWidget extends Widget {
-    private AnnouncerService announcerService = null;
     private final ArrayAdapter<ListEntry> listAdapter;
     private static final long MAX_AGE = 12L*3600L*1000L;
 
@@ -56,29 +55,29 @@ class TrackListWidget extends Widget {
         });
     }
 
-    @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        this.announcerService = announcerService;
-        post(new Runnable() {
-            @Override public void run() {
-                fillList(System.currentTimeMillis());
-            }
-        });
-    }
+    private final Runnable fillList = new Runnable() {
+        @Override
+        public void run() {
+            fillList(System.currentTimeMillis());
+        }
+    };
 
     @Override
-    public void onServiceDisconnected() {
-        this.announcerService = null;
+    public void onServiceConnected() {
+        post(fillList);
     }
 
     @Override
     public void onShow() {
-        fillList(System.currentTimeMillis());
+        fillList.run();
     }
 
     private void fillList(long timestamp) {
         listAdapter.clear();
-        RouteProcessor routeProcessor = new RouteProcessor(announcerService.getStore().getRouteStore(), null, announcerService.getStore().getAvailabilityStore(), new RouteProcessor.Listener() {
+        if (activity.store == null) {
+            return;
+        }
+        RouteProcessor routeProcessor = new RouteProcessor(activity.store.getRouteStore(), null, activity.store.getAvailabilityStore(), new RouteProcessor.Listener() {
             @Override public void receiveEntry(Route route, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
                 if (route.isStarred() && routeIndex + 1 >= route.getRoutePointCount()) {
                     listAdapter.insert(new ListEntry(route, startTime, entryTime), 0);
@@ -87,7 +86,7 @@ class TrackListWidget extends Widget {
             @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed) {
             }
         });
-        List<TrackPoint> trackPoints = announcerService.getStore().getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
+        List<TrackPoint> trackPoints = activity.store.getTrackStore().getTrackPoints(timestamp - MAX_AGE, timestamp, 50);
         Collections.reverse(trackPoints);
         for (TrackPoint trackPoint : trackPoints) {
             if (trackPoint.getLocation().isHidden()) {

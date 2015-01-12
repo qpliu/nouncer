@@ -9,11 +9,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.yrek.nouncer.data.Location;
-import com.yrek.nouncer.store.Store;
 
 class LocationListWidget extends Widget {
     private final ArrayAdapter<Location> listAdapter;
-    private Store store = null;
 
     LocationListWidget(final Main activity, int id) {
         super(activity, id);
@@ -58,25 +56,23 @@ class LocationListWidget extends Widget {
         textView.setEnabled(!item.isHidden());
     }
 
-    private void fillList() {
-        if (store != null) {
-            listAdapter.clear();
-            listAdapter.addAll(store.getLocationStore().getLocations(true));
+    private final Runnable fillList = new Runnable() {
+        @Override
+        public void run() {
+            if (activity.store != null) {
+                listAdapter.clear();
+                listAdapter.addAll(activity.store.getLocationStore().getLocations(true));
+            }
         }
-    }
+    };
 
     @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        store = announcerService.getStore();
-        post(new Runnable() {
-            @Override public void run() {
-                fillList();
-            }
-        });
+    public void onServiceConnected() {
+        post(fillList);
     }
 
     @Override
     public void onShow() {
-        fillList();
+        fillList.run();
     }
 }

@@ -16,14 +16,12 @@ import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.data.RoutePoint;
 import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.RouteProcessor;
-import com.yrek.nouncer.store.Store;
 
 class RouteWidget extends Widget {
     private final TextView name;
     private final ArrayAdapter<RoutePoint> routePointAdapter;
     private final ArrayAdapter<TrackEntry> trackAdapter;
-    private Store store = null;
-    private static final long MAX_AGE = 7L*24L*3600L*1000L;
+    private static final long MAX_AGE = 10L*24L*3600L*1000L;
 
     RouteWidget(final Main activity, int id) {
         super(activity, id);
@@ -148,25 +146,20 @@ class RouteWidget extends Widget {
         }
     };
 
-    @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        store = announcerService.getStore();
-    }
-
     public void show(final Route route) {
         activity.show(activity.tabsWidget, this);
         name.setText(route.getName());
         routePointAdapter.clear();
         routePointAdapter.addAll(route.getRoutePoints());
         trackAdapter.clear();
-        if (store == null) {
+        if (activity.store == null) {
             return;
         }
         new Thread() {
             @Override public void run() {
                 final ArrayList<TrackEntry> trackEntries = new ArrayList<TrackEntry>();
                 final ArrayList<TrackPoint> points = new ArrayList<TrackPoint>();
-                RouteProcessor routeProcessor = new RouteProcessor(store.getRouteStore(), null, store.getAvailabilityStore(), new RouteProcessor.Listener() {
+                RouteProcessor routeProcessor = new RouteProcessor(activity.store.getRouteStore(), null, activity.store.getAvailabilityStore(), new RouteProcessor.Listener() {
                     @Override public void receiveEntry(Route entryRoute, long startTime, int routeIndex, long entryTime, double entryHeading, double entrySpeed) {
                         if (route.equals(entryRoute) && routeIndex + 1 >= route.getRoutePointCount()) {
                             while (points.size() > 0 && !points.get(0).getLocation().equals(route.getRoutePoint(0).getLocation())) {
@@ -178,7 +171,7 @@ class RouteWidget extends Widget {
                     @Override public void receiveExit(Route route, long startTime, int routeIndex, long exitTime, double exitHeading, double exitSpeed) {
                     }
                 });
-                List<TrackPoint> trackPoints = store.getTrackStore().getTrackPoints(System.currentTimeMillis() - MAX_AGE, System.currentTimeMillis(), 500);
+                List<TrackPoint> trackPoints = activity.store.getTrackStore().getTrackPoints(System.currentTimeMillis() - MAX_AGE, System.currentTimeMillis(), 500);
                 Collections.reverse(trackPoints);
                 for (TrackPoint trackPoint : trackPoints) {
                     points.add(trackPoint);

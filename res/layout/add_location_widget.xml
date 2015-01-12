@@ -17,21 +17,21 @@
      android:layout_height="wrap_content"
      android:id="@+id/latitude"
      android:hint="Latitude"
-     android:inputType="numberDecimal"
+     android:inputType="numberDecimal|numberSigned"
      />
   <EditText
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
-     android:id="@+id/latitude"
+     android:id="@+id/longitude"
      android:hint="Longitude"
-     android:inputType="numberDecimal"
+     android:inputType="numberDecimal|numberSigned"
      />
   <EditText
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
      android:id="@+id/elevation"
      android:hint="Elevation"
-     android:inputType="numberDecimal"
+     android:inputType="numberDecimal|numberSigned"
      />
   <Button
      android:layout_width="fill_parent"

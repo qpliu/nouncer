@@ -17,10 +17,13 @@ import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.processor.PointReceiver;
 import com.yrek.nouncer.processor.RouteProcessor;
+import com.yrek.nouncer.store.Store;
 
 public class Main extends Activity {
     private final ArrayList<Widget> widgets = new ArrayList<Widget>();
     private AnnouncerServiceConnection serviceConnection;
+    AnnouncerService announcerService;
+    Store store;
     TabsWidget tabsWidget;
     StartStopWidget startStopWidget;
     StatusWidget statusWidget;
@@ -116,14 +119,13 @@ public class Main extends Activity {
     };
 
     private class AnnouncerServiceConnection implements ServiceConnection {
-        AnnouncerService announcerService = null;
-
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             announcerService = ((AnnouncerService.LocalBinder) service).getService();
             announcerService.setListeners(pointListener, locationListener, routeListener);
+            store = announcerService.getStore();
             for (Widget widget : widgets) {
-                widget.onServiceConnected(announcerService);
+                widget.onServiceConnected();
             }
         }
 

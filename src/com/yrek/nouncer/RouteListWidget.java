@@ -9,11 +9,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.yrek.nouncer.data.Route;
-import com.yrek.nouncer.store.Store;
 
 class RouteListWidget extends Widget {
     private final ArrayAdapter<Route> listAdapter;
-    private Store store = null;
 
     RouteListWidget(final Main activity, int id) {
         super(activity, id);
@@ -52,12 +50,12 @@ class RouteListWidget extends Widget {
                 });
                 break;
             case R.id.restrict_button:
-                store.getRouteStore().hideNonstarred();
-                fillList();
+                activity.store.getRouteStore().hideNonstarred();
+                fillList.run();
                 break;
             case R.id.unrestrict_button:
-                store.getRouteStore().unhideAll();
-                fillList();
+                activity.store.getRouteStore().unhideAll();
+                fillList.run();
                 break;
             default:
                 break;
@@ -85,25 +83,23 @@ class RouteListWidget extends Widget {
         });
     }
 
-    private void fillList() {
-        if (store != null) {
-            listAdapter.clear();
-            listAdapter.addAll(store.getRouteStore().getRoutes());
+    private final Runnable fillList = new Runnable() {
+        @Override
+        public void run() {
+            if (activity.store != null) {
+                listAdapter.clear();
+                listAdapter.addAll(activity.store.getRouteStore().getRoutes());
+            }
         }
-    }
+    };
 
     @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        store = announcerService.getStore();
-        post(new Runnable() {
-            @Override public void run() {
-                fillList();
-            }
-        });
+    public void onServiceConnected() {
+        post(fillList);
     }
 
     @Override
     public void onShow() {
-        fillList();
+        fillList.run();
     }
 }

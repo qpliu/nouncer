@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,12 +15,10 @@ import android.widget.TextView;
 
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Route;
-import com.yrek.nouncer.store.Store;
 
 class LocationWidget extends Widget {
     private final ArrayAdapter<Route> routeAdapter;
-    private Store store = null;
-    private static final long MAX_AGE = 7L*24L*3600L*1000L;
+    private Location location;
 
     LocationWidget(final Main activity, int id) {
         super(activity, id);
@@ -37,7 +37,12 @@ class LocationWidget extends Widget {
 
         view.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                activity.notificationWidget.show("Not implemented");
+                new AlertDialog.Builder(activity).setTitle(String.format("Delete location: %s", location.getName())).setNegativeButton("Cancel", null).setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        location.delete();
+                        activity.show(activity.tabsWidget, activity.locationListWidget);
+                    }
+                }).create().show();
             }
         });
     }
@@ -54,20 +59,16 @@ class LocationWidget extends Widget {
         }
     };
 
-    @Override
-    public void onServiceConnected(AnnouncerService announcerService) {
-        store = announcerService.getStore();
-    }
-
     public void show(Location location) {
+        this.location = location;
         activity.show(activity.tabsWidget, this);
         ((TextView) view.findViewById(R.id.name)).setText(location.getName());
         ((TextView) view.findViewById(R.id.latitude)).setText(String.valueOf(location.getLatitude()));
         ((TextView) view.findViewById(R.id.longitude)).setText(String.valueOf(location.getLongitude()));
         ((TextView) view.findViewById(R.id.elevation)).setText(String.format("%.0fft", location.getElevation()*3.28084));
         routeAdapter.clear();
-        if (store != null) {
-            routeAdapter.addAll(store.getRouteStore().getRoutes(location));
+        if (activity.store != null) {
+            routeAdapter.addAll(activity.store.getRouteStore().getRoutes(location));
         }
         view.findViewById(R.id.delete_button).setEnabled(routeAdapter.getCount() == 0);
     }
