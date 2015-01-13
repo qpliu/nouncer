@@ -24,6 +24,7 @@ public class Main extends Activity {
     private AnnouncerServiceConnection serviceConnection;
     AnnouncerService announcerService;
     Store store;
+    Announcements announcements;
     TabsWidget tabsWidget;
     StartStopWidget startStopWidget;
     StatusWidget statusWidget;
@@ -41,7 +42,9 @@ public class Main extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        widgets.clear();
+        this.announcements = new Announcements(this);
+
+        this.widgets.clear();
         this.tabsWidget = addWidget(new TabsWidget(this, R.id.tabs_widget));
         this.startStopWidget = addWidget(new StartStopWidget(this, R.id.start_stop_widget));
         this.statusWidget = addWidget(new StatusWidget(this, R.id.status_widget));

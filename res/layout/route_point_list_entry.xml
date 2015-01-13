@@ -9,5 +9,26 @@
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
      android:id="@+id/name"
+     android:visibility="visible"
+     />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/entry_label"
+     android:text="Entry announcement:"
+     android:visibility="gone"
+     />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/exit_label"
+     android:text="Exit announcement:"
+     android:visibility="gone"
+     />
+  <Spinner
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/announcement_spinner"
+     android:visibility="gone"
      />
 </LinearLayout>

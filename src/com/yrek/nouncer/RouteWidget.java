@@ -8,8 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.yrek.nouncer.data.Route;
@@ -19,28 +19,26 @@ import com.yrek.nouncer.processor.RouteProcessor;
 
 class RouteWidget extends Widget {
     private final TextView name;
-    private final ArrayAdapter<RoutePoint> routePointAdapter;
+    private final ArrayAdapter<RoutePointEntry> routePointAdapter;
     private final ArrayAdapter<TrackEntry> trackAdapter;
     private static final long MAX_AGE = 10L*24L*3600L*1000L;
 
     RouteWidget(final Main activity, int id) {
         super(activity, id);
         this.name = (TextView) view.findViewById(R.id.name);
-        this.routePointAdapter = new ArrayAdapter<RoutePoint>(activity, R.layout.route_point_list_entry) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
+        this.routePointAdapter = new ArrayAdapter<RoutePointEntry>(activity, R.layout.route_point_list_entry) {
+            @Override public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
                     convertView = activity.getLayoutInflater().inflate(R.layout.route_point_list_entry, parent, false);
                 }
-                renderEntry(convertView, getItem(position));
+                getItem(position).display(convertView);
                 return convertView;
             }
         };
         ((ListView) view.findViewById(R.id.route_point_list)).setAdapter(routePointAdapter);
         ((ListView) view.findViewById(R.id.route_point_list)).setOnItemClickListener(routePointEntryClickListener);
         this.trackAdapter = new ArrayAdapter<TrackEntry>(activity, R.layout.track_list_entry) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
+            @Override public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
                     convertView = activity.getLayoutInflater().inflate(R.layout.track_list_entry, parent, false);
                 }
@@ -62,10 +60,97 @@ class RouteWidget extends Widget {
         ((TextView) view.findViewById(R.id.name)).setText(item.getLocation().getName());
     }
 
+    private class RoutePointEntry {
+        private final RoutePoint routePoint;
+        private final boolean entryAnnouncement;
+        private final boolean exitAnnouncement;
+
+        RoutePointEntry(RoutePoint routePoint, boolean entryAnnouncement, boolean exitAnnouncement) {
+            this.routePoint = routePoint;
+            this.entryAnnouncement = entryAnnouncement;
+            this.exitAnnouncement = exitAnnouncement;
+        }
+
+        boolean isAnnouncement() {
+            return entryAnnouncement || exitAnnouncement;
+        }
+
+        void display(View view) {
+            if (!entryAnnouncement && !exitAnnouncement) {
+                view.findViewById(R.id.name).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.entry_label).setVisibility(View.GONE);
+                view.findViewById(R.id.exit_label).setVisibility(View.GONE);
+                view.findViewById(R.id.announcement_spinner).setVisibility(View.GONE);
+                ((TextView) view.findViewById(R.id.name)).setText(routePoint.getLocation().getName());
+                return;
+            }
+            view.findViewById(R.id.name).setVisibility(View.GONE);
+            String announcement;
+            if (entryAnnouncement) {
+                view.findViewById(R.id.entry_label).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.exit_label).setVisibility(View.GONE);
+                announcement = routePoint.getEntryAnnouncement();
+            } else {
+                view.findViewById(R.id.entry_label).setVisibility(View.GONE);
+                view.findViewById(R.id.exit_label).setVisibility(View.VISIBLE);
+                announcement = routePoint.getExitAnnouncement();
+            }
+            view.findViewById(R.id.announcement_spinner).setVisibility(View.VISIBLE);
+            final ArrayAdapter<Announcements.Announcement> adapter = new ArrayAdapter<Announcements.Announcement>(activity, R.layout.announcement_spinner_entry) {
+                @Override public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    return getView(position, convertView, parent);
+                }
+                @Override public View getView(int position, View convertView, ViewGroup parent) {
+                    if (convertView == null) {
+                        convertView = activity.getLayoutInflater().inflate(R.layout.announcement_spinner_entry, parent, false);
+                    }
+                    ((TextView) convertView).setText(getItem(position).name);
+                    return convertView;
+                }
+            };
+            adapter.addAll(activity.announcements.getAnnouncements());
+            Spinner spinner = (Spinner) view.findViewById(R.id.announcement_spinner);
+            spinner.setAdapter(adapter);
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                private boolean initialized = false;
+                @Override public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                    if (!initialized) {
+                        initialized = true;
+                        return;
+                    }
+                    Announcements.Announcement a = adapter.getItem(position);
+                    if (a.custom) {
+                        activity.notificationWidget.show("Not implemented");
+                        return;
+                    }
+                    if (entryAnnouncement) {
+                        routePoint.setEntryAnnouncement(a.announcement);
+                    } else {
+                        routePoint.setExitAnnouncement(a.announcement);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+            spinner.setSelection(activity.announcements.getIndexByAnnouncement(announcement));
+        }
+    }
+
     private final AdapterView.OnItemClickListener routePointEntryClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            activity.locationWidget.show(routePointAdapter.getItem(position).getLocation());
+            while (position > 0 && routePointAdapter.getItem(position).isAnnouncement()) {
+                position--;
+            }
+            RoutePointEntry item = routePointAdapter.getItem(position);
+            if (position + 1 >= routePointAdapter.getCount() || !routePointAdapter.getItem(position + 1).isAnnouncement()) {
+                routePointAdapter.insert(new RoutePointEntry(item.routePoint, true, false), position + 1);
+                routePointAdapter.insert(new RoutePointEntry(item.routePoint, false, true), position + 2);
+            } else {
+                while (position + 1 < routePointAdapter.getCount() && routePointAdapter.getItem(position + 1).isAnnouncement()) {
+                    routePointAdapter.remove(routePointAdapter.getItem(position + 1));
+                }
+            }
         }
     };
 
@@ -150,7 +235,9 @@ class RouteWidget extends Widget {
         activity.show(activity.tabsWidget, this);
         name.setText(route.getName());
         routePointAdapter.clear();
-        routePointAdapter.addAll(route.getRoutePoints());
+        for (RoutePoint routePoint : route.getRoutePoints()) {
+            routePointAdapter.add(new RoutePointEntry(routePoint, false, false));
+        }
         trackAdapter.clear();
         if (activity.store == null) {
             return;
