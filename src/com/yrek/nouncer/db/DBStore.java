@@ -46,7 +46,7 @@ public class DBStore implements Store {
                 db.execSQL("CREATE INDEX location_longitude ON location (longitude)");
 
                 db.execSQL("CREATE TABLE route (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, starred INTEGER NOT NULL DEFAULT 0)");
-                db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, PRIMARY KEY (route_id, location_id, route_index))");
+                db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, PRIMARY KEY (route_id, route_index))");
 
                 db.execSQL("CREATE TABLE track (id INTEGER PRIMARY KEY AUTOINCREMENT, location_id INTEGER REFERENCES location (id), entry_time INTEGER NOT NULL, exit_time INTEGER, entry_heading FLOAT NOT NULL, exit_heading FLOAT, entry_speed FLOAT NOT NULL, exit_speed FLOAT, entry_timestamp INTEGER NOT NULL, exit_timestamp INTEGER)");
                 db.execSQL("CREATE INDEX track_entry_time ON track (entry_time)");
@@ -284,10 +284,10 @@ public class DBStore implements Store {
             this.id = cursor.getLong(0);
             this.name = cursor.getString(1);
             this.routePoints = new ArrayList<DBRoutePoint>();
-            Cursor c = db.rawQuery("SELECT id, name, latitude, longitude, elevation, entry_announcement, exit_announcement FROM location, route_point WHERE route_id = ? AND id = location_id ORDER BY route_index ASC", new String[] { String.valueOf(id) });
+            Cursor c = db.rawQuery("SELECT id, name, latitude, longitude, elevation, route_index FROM location, route_point WHERE route_id = ? AND id = location_id ORDER BY route_index ASC", new String[] { String.valueOf(id) });
             try {
                 while (c.moveToNext()) {
-                    routePoints.add(new DBRoutePoint(c));
+                    routePoints.add(new DBRoutePoint(id, c));
                 }
             } finally {
                 c.close();
@@ -371,14 +371,14 @@ public class DBStore implements Store {
     }
 
     private class DBRoutePoint implements RoutePoint {
+        private final long routeId;
+        private final int routeIndex;
         private final Location location;
-        private final String entryAnnouncement;
-        private final String exitAnnouncement;
 
-        DBRoutePoint(Cursor cursor) {
+        DBRoutePoint(long routeId, Cursor cursor) {
+            this.routeId = routeId;
+            this.routeIndex = cursor.getInt(5);
             this.location = new DBLocation(cursor, 0);
-            this.entryAnnouncement = cursor.isNull(5) ? null : cursor.getString(5);
-            this.exitAnnouncement = cursor.isNull(6) ? null : cursor.getString(6);
         }
 
         @Override
@@ -388,12 +388,36 @@ public class DBStore implements Store {
 
         @Override
         public String getEntryAnnouncement() {
-            return entryAnnouncement;
+            Cursor c = db.rawQuery("SELECT entry_announcement FROM route_point WHERE route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
+            try {
+                return c.moveToNext() && !c.isNull(0) ? c.getString(0) : null;
+            } finally {
+                c.close();
+            }
         }
 
         @Override
         public String getExitAnnouncement() {
-            return exitAnnouncement;
+            Cursor c = db.rawQuery("SELECT exit_announcement FROM route_point WHERE route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
+            try {
+                return c.moveToNext() && !c.isNull(0) ? c.getString(0) : null;
+            } finally {
+                c.close();
+            }
+        }
+
+        @Override
+        public void setEntryAnnouncement(String entryAnnouncement) {
+            ContentValues values = new ContentValues();
+            values.put("entry_announcement", entryAnnouncement);
+            db.update("route_point", values, "route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
+        }
+
+        @Override
+        public void setExitAnnouncement(String exitAnnouncement) {
+            ContentValues values = new ContentValues();
+            values.put("exit_announcement", exitAnnouncement);
+            db.update("route_point", values, "route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
         }
     }
 
