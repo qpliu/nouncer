@@ -79,6 +79,16 @@ func GetTrack(rows *sql.Rows) *Track {
 	return t
 }
 
+func GetUnavailable(rows *sql.Rows) (*time.Time, *time.Time) {
+	var start, end int64
+	if err := rows.Scan(&start, &end); err != nil {
+		panic(err)
+	}
+	tStart := time.Unix(start/1000, (start%1000)*1000000)
+	tEnd := time.Unix(end/1000, (end%1000)*1000000)
+	return &tStart, &tEnd
+}
+
 func GetLocations(db *sql.DB) []*Location {
 	var locs []*Location
 	rows, err := db.Query("SELECT id, name, latitude, longitude, elevation FROM location")
@@ -170,21 +180,29 @@ func main() {
 	}
 	defer db.Close()
 
+	day := ""
+	startTime := time.Now().Add(-time.Hour*24*3).Unix() * 1000
 	locs := GetLocations(db)
-	points, err := db.Query("SELECT latitude, longitude, elevation, time, tag FROM point ORDER BY time ASC")
+	points, err := db.Query("SELECT latitude, longitude, elevation, time, tag FROM point WHERE time > ? ORDER BY time ASC", startTime)
 	if err != nil {
 		panic(err)
 	}
 	defer points.Close()
-	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time), entry_heading, coalesce(exit_heading,entry_heading), entry_speed, coalesce(exit_speed,entry_speed), entry_timestamp, coalesce(exit_timestamp,entry_timestamp) FROM location, track WHERE location.id = location_id ORDER BY track.id ASC")
+	tracks, err := db.Query("SELECT location.id, name, latitude, longitude, elevation, entry_time, coalesce(exit_time,entry_time), entry_heading, coalesce(exit_heading,entry_heading), entry_speed, coalesce(exit_speed,entry_speed), entry_timestamp, coalesce(exit_timestamp,entry_timestamp) FROM location, track WHERE location.id = location_id AND entry_timestamp > ? ORDER BY track.id ASC", startTime)
 	if err != nil {
 		panic(err)
 	}
 	defer tracks.Close()
+	unavailable, err := db.Query("SELECT unavailable_start_time, unavailable_end_time FROM availability WHERE unavailable_start_time > ? ORDER BY unavailable_start_time ASC", startTime)
+	if err != nil {
+		panic(err)
+	}
+	defer unavailable.Close()
 
 	entered := false
 	var p, lastPoint *Point
 	var t *Track
+	var uStart, uEnd *time.Time
 	for {
 		if p == nil && points.Next() {
 			p = GetPoint(points)
@@ -193,8 +211,24 @@ func main() {
 			t = GetTrack(tracks)
 			entered = false
 		}
-		if p == nil && t == nil {
+		if uStart == nil && uEnd == nil && unavailable.Next() {
+			uStart, uEnd = GetUnavailable(unavailable)
+		}
+		if p == nil && t == nil && uStart == nil && uEnd == nil {
 			break
+		}
+		if uStart != nil {
+			if p == nil || p.Time.After(*uStart) {
+				fmt.Printf("%s UNAVAILABLE (%s-%s)\n", uStart.Format("15:04:05"), uStart.Format("15:04:05"), uEnd.Format("15:04:05"))
+				uStart = nil
+				continue
+			}
+		} else if uEnd != nil {
+			if p == nil || p.Time.After(*uEnd) {
+				fmt.Printf("%s AVAILABLE\n", uEnd.Format("15:04:05"))
+				uEnd = nil
+				continue
+			}
 		}
 		printPoint := p != nil
 		if t != nil {
@@ -209,11 +243,14 @@ func main() {
 			}
 		}
 		if printPoint {
+			newDay := p.Time.Format("2006-01-02")
+			if newDay != day {
+				day = newDay
+				fmt.Printf("%s\n", day)
+			}
 			loc, dist := NearestLocation(p, locs, 999)
 			s := fmt.Sprintf("%s%s (%.0f)", p.Time.Format("15:04:05"), p.Tag, p.Elev*3.28084)
-			if loc == nil || p.Tag[0] != '+' {
-				fmt.Printf("%s\n", s)
-			} else {
+			if loc != nil && p.Tag[0] == '+' {
 				h, dir := Heading(&loc.Pt, &p.Pt)
 				fmt.Printf("%-15s %6.2f % 4.0f%2s %.13s (%.0f)", s, dist, h, dir, loc.Name, loc.Elev*3.28084)
 				if lastPoint != nil {

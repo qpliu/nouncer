@@ -139,43 +139,19 @@ class LocationSource {
 
         @Override
         public void onProviderDisabled(String provider) {
-            logEvent("providerDisabled"+level+":"+provider);
         }
 
         @Override
         public void onProviderEnabled(String provider) {
-            logEvent("providerEnabled"+level+":"+provider);
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            logEvent("statusChanged"+level+":"+provider+","+status);
             if (status == LocationProvider.AVAILABLE) {
                 availabilityProcessor.available(System.currentTimeMillis());
             } else {
                 availabilityProcessor.unavailable(System.currentTimeMillis());
             }
-        }
-
-        private void logEvent(String note) {
-            final long time = System.currentTimeMillis();
-            pointStore.addPoint(new Point() {
-                @Override public double getLatitude() {
-                    return 0.0;
-                }
-
-                @Override public double getLongitude() {
-                    return 0.0;
-                }
-
-                @Override public double getElevation() {
-                    return 0.0;
-                }
-
-                @Override public long getTime() {
-                    return time;
-                }
-            }, note);
         }
     }
 }
