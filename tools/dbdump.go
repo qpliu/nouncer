@@ -174,14 +174,25 @@ func Speed(p1, p2 *Point) float64 {
 }
 
 func main() {
-	db, err := sql.Open("sqlite3", os.Args[1])
+	daysToDump := 1
+	argIndex := 1
+	if os.Args[1] == "-1" {
+		argIndex = 2
+	} else if os.Args[1] == "-2" {
+		daysToDump = 2
+		argIndex = 2
+	} else if os.Args[1] == "-3" {
+		daysToDump = 3
+		argIndex = 2
+	}
+	db, err := sql.Open("sqlite3", os.Args[argIndex])
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 
 	day := ""
-	startTime := time.Now().Add(-time.Hour*24*3).Unix() * 1000
+	startTime := time.Now().Add(-time.Hour*24*time.Duration(daysToDump)).Unix() * 1000
 	locs := GetLocations(db)
 	points, err := db.Query("SELECT latitude, longitude, elevation, time, tag FROM point WHERE time > ? ORDER BY time ASC", startTime)
 	if err != nil {
@@ -257,10 +268,10 @@ func main() {
 					lastDist := Dist(&lastPoint.Pt, &loc.Pt)
 					if lastDist > dist {
 						t, d := ExtrapolateTime(lastPoint, p, loc)
-						fmt.Printf(" ENTRY:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
+						fmt.Printf(" IN:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
 					} else {
 						t, d := ExtrapolateTime(p, lastPoint, loc)
-						fmt.Printf(" EXIT:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
+						fmt.Printf(" OUT:%s %6.2f %.1fmph", t.Format("15:04:05"), d, Speed(lastPoint, p)*2.23694)
 					}
 				}
 				fmt.Printf("\n")
