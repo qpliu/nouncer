@@ -117,6 +117,11 @@ public class DBStore implements Store {
                 cursor.close();
             }
         }
+
+        @Override
+        public void delete(Location location) {
+            db.delete("location", "id = ?", new String[] { String.valueOf(((DBLocation) location).id) });
+        }
     };
 
     private class DBLocation implements Location {
@@ -172,11 +177,6 @@ public class DBStore implements Store {
                 locationHiddenCache.put(id, hidden);
             }
             return hidden;
-        }
-
-        @Override
-        public void delete() {
-            db.delete("location", "id = ?", new String[] { String.valueOf(id) });
         }
 
         @Override 
@@ -272,6 +272,33 @@ public class DBStore implements Store {
                 routeHiddenCache.clear();
             }
         }
+
+        @Override
+        public void delete(Route route) {
+            db.beginTransaction();
+            try {
+                db.delete("route_point", "route_id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
+                db.delete("route", "id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+
+        @Override
+        public Route addRoute(String name, List<Location> locations) {
+            db.beginTransaction();
+            try {
+                long id = insertRoute(db, name);
+                for (int i = 0; i < locations.size(); i++) {
+                    insertRoutePoint(db, id, ((DBLocation) locations.get(i)).id, i, null, null);
+                }
+                db.setTransactionSuccessful();
+                return new DBRoute(id, name, locations);
+            } finally {
+                db.endTransaction();
+            }
+        }
     };
 
 
@@ -291,6 +318,15 @@ public class DBStore implements Store {
                 }
             } finally {
                 c.close();
+            }
+        }
+
+        DBRoute(long id, String name, List<Location> locations) {
+            this.id = id;
+            this.name = name;
+            this.routePoints = new ArrayList<DBRoutePoint>();
+            for (int i = 0; i < locations.size(); i++) {
+                routePoints.add(new DBRoutePoint(id, i, locations.get(i)));
             }
         }
 
@@ -379,6 +415,12 @@ public class DBStore implements Store {
             this.routeId = routeId;
             this.routeIndex = cursor.getInt(5);
             this.location = new DBLocation(cursor, 0);
+        }
+
+        DBRoutePoint(long routeId, int routeIndex, Location location) {
+            this.routeId = routeId;
+            this.routeIndex = routeIndex;
+            this.location = location;
         }
 
         @Override

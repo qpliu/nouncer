@@ -39,7 +39,7 @@ class LocationWidget extends Widget {
             @Override public void onClick(View v) {
                 new AlertDialog.Builder(activity).setTitle(String.format("Delete location: %s", location.getName())).setNegativeButton("Cancel", null).setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
-                        location.delete();
+                        activity.store.getLocationStore().delete(location);
                         activity.show(activity.tabsWidget, activity.locationListWidget);
                     }
                 }).create().show();
