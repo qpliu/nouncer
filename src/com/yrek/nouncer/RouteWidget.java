@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -85,7 +87,7 @@ class RouteWidget extends Widget {
                 return;
             }
             view.findViewById(R.id.name).setVisibility(View.GONE);
-            String announcement;
+            final String announcement;
             if (entryAnnouncement) {
                 view.findViewById(R.id.entry_label).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.exit_label).setVisibility(View.GONE);
@@ -109,7 +111,7 @@ class RouteWidget extends Widget {
                 }
             };
             adapter.addAll(activity.announcements.getAnnouncements());
-            Spinner spinner = (Spinner) view.findViewById(R.id.announcement_spinner);
+            final Spinner spinner = (Spinner) view.findViewById(R.id.announcement_spinner);
             spinner.setAdapter(adapter);
             spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 private boolean initialized = false;
@@ -120,10 +122,23 @@ class RouteWidget extends Widget {
                     }
                     Announcements.Announcement a = adapter.getItem(position);
                     if (a.custom) {
-                        activity.notificationWidget.show("Not implemented");
-                        return;
-                    }
-                    if (entryAnnouncement) {
+                        final View dialogView = activity.getLayoutInflater().inflate(R.layout.custom_announcement_dialog, null);
+                        ((TextView) dialogView).setText(announcement == null ? "" : announcement);
+                        new AlertDialog.Builder(activity).setView(dialogView).setTitle(String.format("Set custom %s announcement", entryAnnouncement ? "entry" : "exit")).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override public void onClick(DialogInterface dialog, int which) {
+                                initialized = false;
+                                spinner.setSelection(activity.announcements.getIndexByAnnouncement(announcement));
+                            }
+                        }).setPositiveButton("Set announcement", new DialogInterface.OnClickListener() {
+                            @Override public void onClick(DialogInterface dialog, int which) {
+                                if (entryAnnouncement) {
+                                    routePoint.setEntryAnnouncement(((TextView) dialogView).getText().toString());
+                                } else {
+                                    routePoint.setExitAnnouncement(((TextView) dialogView).getText().toString());
+                                }
+                            }
+                        }).create().show();
+                    } else if (entryAnnouncement) {
                         routePoint.setEntryAnnouncement(a.announcement);
                     } else {
                         routePoint.setExitAnnouncement(a.announcement);
