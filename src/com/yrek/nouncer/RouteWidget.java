@@ -20,14 +20,13 @@ import com.yrek.nouncer.data.TrackPoint;
 import com.yrek.nouncer.processor.RouteProcessor;
 
 class RouteWidget extends Widget {
-    private final TextView name;
+    private Route route;
     private final ArrayAdapter<RoutePointEntry> routePointAdapter;
     private final ArrayAdapter<TrackEntry> trackAdapter;
     private static final long MAX_AGE = 10L*24L*3600L*1000L;
 
     RouteWidget(final Main activity, int id) {
         super(activity, id);
-        this.name = (TextView) view.findViewById(R.id.name);
         this.routePointAdapter = new ArrayAdapter<RoutePointEntry>(activity, R.layout.route_point_list_entry) {
             @Override public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null) {
@@ -53,7 +52,12 @@ class RouteWidget extends Widget {
 
         view.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                activity.notificationWidget.show("Not implemented");
+                new AlertDialog.Builder(activity).setTitle(String.format("Delete route: %s", route.getName())).setNegativeButton("Cancel", null).setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        activity.store.getRouteStore().delete(route);
+                        activity.show(activity.tabsWidget, activity.routeListWidget);
+                    }
+                }).create().show();
             }
         });
     }
@@ -248,7 +252,8 @@ class RouteWidget extends Widget {
 
     public void show(final Route route) {
         activity.show(activity.tabsWidget, this);
-        name.setText(route.getName());
+        this.route = route;
+        ((TextView) view.findViewById(R.id.name)).setText(route.getName());
         routePointAdapter.clear();
         for (RoutePoint routePoint : route.getRoutePoints()) {
             routePointAdapter.add(new RoutePointEntry(routePoint, false, false));
