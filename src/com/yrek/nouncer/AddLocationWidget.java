@@ -31,29 +31,29 @@ class AddLocationWidget extends Widget {
     private void add() {
         String name = ((TextView) view.findViewById(R.id.name)).getText().toString().trim();
         if (name.length() == 0) {
-            activity.notificationWidget.show("Empty name");
+            activity.notificationWidget.show("Add Location: Empty name");
             return;
         }
         double latitude;
         try {
             latitude = Double.parseDouble(((TextView) view.findViewById(R.id.latitude)).getText().toString().trim());
         } catch (NumberFormatException e) {
-            activity.notificationWidget.show("Invalid latitude");
+            activity.notificationWidget.show("Add Location: Invalid latitude");
             return;
         }
         if (latitude < -90.0 || latitude > 90.0) {
-            activity.notificationWidget.show("Invalid latitude");
+            activity.notificationWidget.show("Add Location: Invalid latitude");
             return;
         }
         double longitude;
         try {
             longitude = Double.parseDouble(((TextView) view.findViewById(R.id.longitude)).getText().toString().trim());
         } catch (NumberFormatException e) {
-            activity.notificationWidget.show("Invalid longitude");
+            activity.notificationWidget.show("Add Location: Invalid longitude");
             return;
         }
         if (longitude < -180.0 || longitude > 180.0) {
-            activity.notificationWidget.show("Invalid longitude");
+            activity.notificationWidget.show("Add Location: Invalid longitude");
             return;
         }
         double elevation = 0.0;

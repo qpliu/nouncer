@@ -37,7 +37,7 @@
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
      android:id="@+id/add_button"
-     android:text="Add location"
+     android:text="Add Location"
      />
   <Button
      android:layout_width="fill_parent"

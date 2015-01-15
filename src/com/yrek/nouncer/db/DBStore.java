@@ -183,6 +183,11 @@ public class DBStore implements Store {
         public boolean equals(Object o) {
             return o instanceof DBLocation && ((DBLocation) o).id == id;
         }
+
+        @Override
+        public int hashCode() {
+            return (int) id;
+        }
     }
 
     @Override
@@ -403,6 +408,11 @@ public class DBStore implements Store {
         @Override 
         public boolean equals(Object o) {
             return o instanceof DBRoute && ((DBRoute) o).id == id;
+        }
+
+        @Override
+        public int hashCode() {
+            return (int) id;
         }
     }
 
