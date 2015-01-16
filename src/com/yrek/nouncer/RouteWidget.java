@@ -91,15 +91,12 @@ class RouteWidget extends Widget {
                 return;
             }
             view.findViewById(R.id.name).setVisibility(View.GONE);
-            final String announcement;
             if (entryAnnouncement) {
                 view.findViewById(R.id.entry_label).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.exit_label).setVisibility(View.GONE);
-                announcement = routePoint.getEntryAnnouncement();
             } else {
                 view.findViewById(R.id.entry_label).setVisibility(View.GONE);
                 view.findViewById(R.id.exit_label).setVisibility(View.VISIBLE);
-                announcement = routePoint.getExitAnnouncement();
             }
             view.findViewById(R.id.announcement_spinner).setVisibility(View.VISIBLE);
             final ArrayAdapter<Announcements.Announcement> adapter = new ArrayAdapter<Announcements.Announcement>(activity, R.layout.announcement_spinner_entry) {
@@ -110,28 +107,47 @@ class RouteWidget extends Widget {
                     if (convertView == null) {
                         convertView = activity.getLayoutInflater().inflate(R.layout.announcement_spinner_entry, parent, false);
                     }
-                    ((TextView) convertView).setText(getItem(position).name);
+                    Announcements.Announcement a = getItem(position);
+                    String announcement = entryAnnouncement ? routePoint.getEntryAnnouncement() : routePoint.getExitAnnouncement();
+                    ((TextView) convertView).setText(a != null ? a.name : String.format("Custom (%.5s%s)", announcement, announcement != null && announcement.length() > 5 ? "..." : ""));
                     return convertView;
                 }
             };
             adapter.addAll(activity.announcements.getAnnouncements());
             final Spinner spinner = (Spinner) view.findViewById(R.id.announcement_spinner);
             spinner.setAdapter(adapter);
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                private boolean initialized = false;
-                @Override public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-                    if (!initialized) {
-                        initialized = true;
-                        return;
+            Announcements.Announcement a = activity.announcements.getByAnnouncement(entryAnnouncement ? routePoint.getEntryAnnouncement() : routePoint.getExitAnnouncement());
+            int spinnerSelection = 0;
+            if (a != null) {
+                for (int i = 0; i < adapter.getCount(); i++) {
+                    if (a == adapter.getItem(i)) {
+                        spinnerSelection = i;
+                        break;
                     }
+                }
+            }
+            if (a != null && a.custom) {
+                adapter.insert(null, spinnerSelection);
+            }
+            spinner.setOnItemSelectedListener(null);
+            spinner.setSelection(spinnerSelection, false);
+            final int finalSpinnerSelection = spinnerSelection;
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                private int oldSelection = finalSpinnerSelection;
+                @Override public void onItemSelected(AdapterView<?> parent, View v, final int position, long id) {
                     Announcements.Announcement a = adapter.getItem(position);
-                    if (a.custom) {
+                    if (a == null) {
+                        assert false;
+                    } else if (a.custom) {
+                        final AdapterView.OnItemSelectedListener onItemSelectedListener = this;
                         final View dialogView = activity.getLayoutInflater().inflate(R.layout.custom_announcement_dialog, null);
+                        String announcement = entryAnnouncement ? routePoint.getEntryAnnouncement() : routePoint.getExitAnnouncement();
                         ((TextView) dialogView).setText(announcement == null ? "" : announcement);
                         new AlertDialog.Builder(activity).setView(dialogView).setTitle(String.format("Set custom %s announcement", entryAnnouncement ? "entry" : "exit")).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override public void onClick(DialogInterface dialog, int which) {
-                                initialized = false;
-                                spinner.setSelection(activity.announcements.getIndexByAnnouncement(announcement));
+                                spinner.setOnItemSelectedListener(null);
+                                spinner.setSelection(oldSelection, false);
+                                spinner.setOnItemSelectedListener(onItemSelectedListener);
                             }
                         }).setPositiveButton("Set announcement", new DialogInterface.OnClickListener() {
                             @Override public void onClick(DialogInterface dialog, int which) {
@@ -140,18 +156,30 @@ class RouteWidget extends Widget {
                                 } else {
                                     routePoint.setExitAnnouncement(((TextView) dialogView).getText().toString());
                                 }
+                                spinner.setOnItemSelectedListener(null);
+                                if (position > 0 && adapter.getItem(position - 1) == null) {
+                                    spinner.setSelection(position - 1, false);
+                                } else {
+                                    adapter.insert(null, position);
+                                    spinner.setSelection(position, false);
+                                }
+                                spinner.setOnItemSelectedListener(onItemSelectedListener);
+                                oldSelection = spinner.getSelectedItemPosition();
                             }
                         }).create().show();
                     } else if (entryAnnouncement) {
                         routePoint.setEntryAnnouncement(a.announcement);
+                        adapter.remove(null);
+                        oldSelection = spinner.getSelectedItemPosition();
                     } else {
                         routePoint.setExitAnnouncement(a.announcement);
+                        adapter.remove(null);
+                        oldSelection = spinner.getSelectedItemPosition();
                     }
                 }
                 @Override public void onNothingSelected(AdapterView<?> parent) {
                 }
             });
-            spinner.setSelection(activity.announcements.getIndexByAnnouncement(announcement));
         }
     }
 

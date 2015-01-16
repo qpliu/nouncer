@@ -100,6 +100,14 @@ public class Announcements {
     }
 
     public Announcement getByAnnouncement(String announcement) {
+        if (announcement == null) {
+            for (Announcement a : announcements) {
+                if (a.announcement == null) {
+                    return a;
+                }
+            }
+            return null;
+        }
         for (Announcement a : announcements) {
             if (a.announcement != null && a.announcement.equals(announcement)) {
                 return a;
@@ -111,22 +119,5 @@ public class Announcements {
             }
         }
         return null;
-    }
-
-    public int getIndexByAnnouncement(String announcement) {
-        int customIndex = 0;
-        for (int i = 0; i < announcements.size(); i++) {
-            Announcement a = announcements.get(i);
-            if (a.announcement == null) {
-                if (a.custom) {
-                    customIndex = i;
-                } else if (announcement == null) {
-                    return i;
-                }
-            } else if (a.announcement.equals(announcement)) {
-                return i;
-            }
-        }
-        return customIndex;
     }
 }

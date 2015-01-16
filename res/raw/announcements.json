@@ -1,6 +1,6 @@
 [{"name":"Time of day","announcement":"%1$tl:%1$tM","default":"initial exit"},
  {"name":"Route time (3x)","announcement":"%2$d minutes %3$02d seconds %2$d minutes %3$02d seconds %2$d minutes %3$02d seconds","default":"subsequent entry"},
  {"name":"None"},
- {"name":"Custom","custom":true},
+ {"name":"Custom...","custom":true},
  {"name":"Route name","announcement":"%4$s"},
  {"name":"Location name","announcement":"%5$s"}]
