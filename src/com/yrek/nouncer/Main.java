@@ -58,6 +58,15 @@ public class Main extends Activity {
         this.notificationWidget = addWidget(new NotificationWidget(this, R.id.notification_widget));
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+            for (Widget w : widgets) {
+                w.onNewIntent(intent);
+            }
+        }
+    }
+
     private <W extends Widget> W addWidget(W widget) {
         widgets.add(widget);
         return widget;

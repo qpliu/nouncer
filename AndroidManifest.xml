@@ -7,12 +7,20 @@
    >
   <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17"/>
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
   <application android:label="@string/app_name">
     <activity android:name=".Main" android:label="@string/app_name">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+	<data android:scheme="nouncer"/>
       </intent-filter>
     </activity>
     <service android:name=".AnnouncerService" android:exported="false"/>

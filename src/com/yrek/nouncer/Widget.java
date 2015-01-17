@@ -1,5 +1,6 @@
 package com.yrek.nouncer;
 
+import android.content.Intent;
 import android.view.View;
 
 import com.yrek.nouncer.data.Location;
@@ -61,5 +62,8 @@ public abstract class Widget implements PointProcessor.Listener, PointReceiver, 
 
     protected void post(Runnable runnable) {
         view.post(runnable);
+    }
+
+    public void onNewIntent(Intent intent) {
     }
 }

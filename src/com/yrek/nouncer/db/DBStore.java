@@ -21,6 +21,7 @@ import com.yrek.nouncer.data.Point;
 import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.data.RoutePoint;
 import com.yrek.nouncer.data.TrackPoint;
+import com.yrek.nouncer.external.LinkStore;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.store.AvailabilityStore;
 import com.yrek.nouncer.store.LocationStore;
@@ -663,6 +664,16 @@ public class DBStore implements Store {
     @Override
     public AvailabilityStore getAvailabilityStore() {
         return availabilityStore;
+    }
+
+    @Override
+    public LinkStore<Location> getLocationLinkStore() {
+        return null;
+    }
+
+    @Override
+    public LinkStore<Route> getRouteLinkStore() {
+        return null;
     }
 
     private static long insertLocation(SQLiteDatabase db, String name, double latitude, double longitude, double elevation) {
