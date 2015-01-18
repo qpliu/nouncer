@@ -2,6 +2,7 @@ package com.yrek.nouncer;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import android.view.View;
 import android.view.ViewGroup;
@@ -280,6 +281,16 @@ class AddRouteWidget extends Widget {
         activity.show(activity.tabsWidget, activity.addRouteWidget);
         locationListAdapter.clear();
         name.setText("");
+    }
+
+    void show(OnFinish onFinish, String name, List<Location> locations) {
+        this.onFinish = onFinish;
+        activity.show(activity.tabsWidget, activity.addRouteWidget);
+        locationListAdapter.clear();
+        this.name.setText(name);
+        for (Location l : locations) {
+            locationListAdapter.add(new LocationHolder(l));
+        }
     }
 
     @Override

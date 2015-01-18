@@ -71,5 +71,24 @@ class AddLocationWidget extends Widget {
     void show(OnFinish onFinish) {
         this.onFinish = onFinish;
         activity.show(activity.tabsWidget, activity.addLocationWidget);
+        ((TextView) view.findViewById(R.id.name)).setText("");
+        ((TextView) view.findViewById(R.id.latitude)).setText("");
+        view.findViewById(R.id.latitude).setEnabled(true);
+        ((TextView) view.findViewById(R.id.longitude)).setText("");
+        view.findViewById(R.id.longitude).setEnabled(true);
+        ((TextView) view.findViewById(R.id.elevation)).setText("");
+        view.findViewById(R.id.elevation).setEnabled(true);
+    }
+
+    void show(OnFinish onFinish, String name, double latitude, double longitude, double elevation) {
+        this.onFinish = onFinish;
+        activity.show(activity.tabsWidget, activity.addLocationWidget);
+        ((TextView) view.findViewById(R.id.name)).setText(name);
+        ((TextView) view.findViewById(R.id.latitude)).setText(String.valueOf(latitude));
+        view.findViewById(R.id.latitude).setEnabled(false);
+        ((TextView) view.findViewById(R.id.longitude)).setText(String.valueOf(longitude));
+        view.findViewById(R.id.longitude).setEnabled(false);
+        ((TextView) view.findViewById(R.id.elevation)).setText(String.valueOf(elevation));
+        view.findViewById(R.id.elevation).setEnabled(false);
     }
 }
