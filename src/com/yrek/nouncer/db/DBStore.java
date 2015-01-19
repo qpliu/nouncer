@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -21,6 +22,8 @@ import com.yrek.nouncer.data.Point;
 import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.data.RoutePoint;
 import com.yrek.nouncer.data.TrackPoint;
+import com.yrek.nouncer.external.ExternalSource;
+import com.yrek.nouncer.external.Link;
 import com.yrek.nouncer.external.LinkStore;
 import com.yrek.nouncer.processor.PointProcessor;
 import com.yrek.nouncer.store.AvailabilityStore;
@@ -59,6 +62,25 @@ public class DBStore implements Store {
                 db.execSQL("CREATE TABLE availability (unavailable_start_time INTEGER NOT NULL, unavailable_end_time INTEGER NOT NULL)");
                 db.execSQL("CREATE INDEX availability_start ON availability (unavailable_start_time)");
                 db.execSQL("CREATE INDEX availability_end ON availability (unavailable_end_time)");
+
+                db.execSQL("CREATE TABLE external_source (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id TEXT NOT NULL)");
+                db.execSQL("CREATE INDEX external_source_source_id ON external_source (source_id)");
+                db.execSQL("CREATE TABLE external_source_attribute (external_source_id INTEGER REFERENCES external_source (id), key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (external_source_id, key))");
+                db.execSQL("CREATE INDEX external_source_attribute_external_source_id ON external_source_attribute (external_source_id)");
+
+                db.execSQL("CREATE TABLE location_link (location_id INTEGER REFERENCES location (id), external_source_id INTEGER REFERENCES external_source (id), external_id TEXT NOT NULL, PRIMARY KEY (location_id, external_source_id, external_id))");
+                db.execSQL("CREATE INDEX location_link_external_source_id ON location_link (external_source_id)");
+                db.execSQL("CREATE TABLE location_link_attribute (location_id INTEGER REFERENCES location (id), external_source_id INTEGER REFERENCES external_source (id), external_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (location_id, external_source_id, external_id, key))");
+                db.execSQL("CREATE INDEX location_link_attribute_link ON location_link_attribute (location_id, external_source_id, external_id)");
+                db.execSQL("CREATE INDEX location_link_attribute_location_id ON location_link_attribute (location_id)");
+                db.execSQL("CREATE INDEX location_link_attribute_external_source_id ON location_link_attribute (external_source_id)");
+
+                db.execSQL("CREATE TABLE route_link (route_id INTEGER REFERENCES route (id), external_source_id INTEGER REFERENCES external_source (id), external_id TEXT NOT NULL, PRIMARY KEY (route_id, external_source_id, external_id))");
+                db.execSQL("CREATE INDEX route_link_external_source_id ON route_link (external_source_id)");
+                db.execSQL("CREATE TABLE route_link_attribute (route_id INTEGER REFERENCES route (id), external_source_id INTEGER REFERENCES external_source (id), external_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (route_id, external_source_id, external_id, key))");
+                db.execSQL("CREATE INDEX route_link_attribute_link ON route_link_attribute (route_id, external_source_id, external_id)");
+                db.execSQL("CREATE INDEX route_link_attribute_route_id ON route_link_attribute (route_id)");
+                db.execSQL("CREATE INDEX route_link_attribute_external_source_id ON route_link_attribute (external_source_id)");
 
                 try {
                     insertInitialData(db, context.getResources());
@@ -121,7 +143,15 @@ public class DBStore implements Store {
 
         @Override
         public void delete(Location location) {
-            db.delete("location", "id = ?", new String[] { String.valueOf(((DBLocation) location).id) });
+            db.beginTransaction();
+            try {
+                db.delete("location", "id = ?", new String[] { String.valueOf(((DBLocation) location).id) });
+                db.delete("location_link", "location_id = ?", new String[] { String.valueOf(((DBLocation) location).id) });
+                db.delete("location_link_attribute", "location_id = ?", new String[] { String.valueOf(((DBLocation) location).id) });
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
         }
     };
 
@@ -285,6 +315,8 @@ public class DBStore implements Store {
             try {
                 db.delete("route_point", "route_id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
                 db.delete("route", "id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
+                db.delete("route_link", "route_id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
+                db.delete("route_link_attribute", "route_id = ?", new String[] { String.valueOf(((DBRoute) route).id) });
                 db.setTransactionSuccessful();
             } finally {
                 db.endTransaction();
@@ -666,14 +698,292 @@ public class DBStore implements Store {
         return availabilityStore;
     }
 
+    private class DBExternalSource implements ExternalSource {
+        private final long id;
+        private final String sourceId;
+
+        DBExternalSource(Cursor cursor, int column) {
+            this.id = cursor.getLong(column + 0);
+            this.sourceId = cursor.getString(column + 1);
+        }
+
+        DBExternalSource(long id, String sourceId) {
+            this.id = id;
+            this.sourceId = sourceId;
+        }
+
+        @Override
+        public String getExternalSourceId() {
+            return sourceId;
+        }
+
+        @Override
+        public Map<String,String> getAttributes() {
+            HashMap<String,String> attrs = new HashMap<String,String>();
+            Cursor cursor = db.rawQuery("SELECT key, value FROM external_source_attribute WHERE external_source_id = ?", new String[] { String.valueOf(id) });
+            while (cursor.moveToNext()) {
+                attrs.put(cursor.getString(0), cursor.getString(1));
+            }
+            return attrs;
+        }
+
+        @Override
+        public void setAttribute(String key, String value) {
+            if (value == null) {
+                db.delete("external_source", "external_source_id = ? AND key = ?", new String[] { String.valueOf(id), key });
+            } else {
+                ContentValues values = new ContentValues();
+                values.put("value", value);
+                int count = db.update("external_source_attribute", values, "external_source_id = ? AND key = ?", new String[] { String.valueOf(id), key });
+                if (count == 0) {
+                    values.put("external_source_id", id);
+                    values.put("key", key);
+                    db.insert("external_source_attribute", null, values);
+                }
+            }
+        }
+    }
+
+    private class DBLink<T> implements Link<T> {
+        private final String tName;
+        private final DBExternalSource externalSource;
+        private final String externalId;
+        private final long itemId;
+        private final T item;
+
+        DBLink(DBLinkStore<T> linkStore, DBExternalSource externalSource, Cursor cursor) {
+            this.tName = linkStore.tName;
+            this.externalSource = externalSource;
+            this.externalId = cursor.getString(1);
+            this.itemId = cursor.getLong(0);
+            this.item = linkStore.item(itemId);
+        }
+
+        DBLink(DBLinkStore<T> linkStore, DBExternalSource externalSource, String externalId, long itemId, T item) {
+            this.tName = linkStore.tName;
+            this.externalSource = externalSource;
+            this.externalId = externalId;
+            this.itemId = itemId;
+            this.item = item;
+        }
+
+        @Override
+        public ExternalSource getExternalSource() {
+            return externalSource;
+        }
+
+        @Override
+        public String getExternalId() {
+            return externalId;
+        }
+
+        @Override
+        public Map<String,String> getAttributes() {
+            HashMap<String,String> attrs = new HashMap<String,String>();
+            Cursor cursor = db.rawQuery("SELECT key, value FROM "+tName+"_link_attribute WHERE "+tName+"_id = ? AND external_source_id = ? AND external_id = ?", new String[] { String.valueOf(itemId), String.valueOf(externalSource.id), externalId });
+            while (cursor.moveToNext()) {
+                attrs.put(cursor.getString(0), cursor.getString(1));
+            }
+            return attrs;
+        }
+
+        @Override
+        public void setAttribute(String key, String value) {
+            if (value == null) {
+                db.delete(tName+"_link_attribute", tName+"_id = ? AND external_source_id = ? AND external_id = AND key = ?", new String[] { String.valueOf(itemId), String.valueOf(externalSource.id), externalId, key });
+            } else {
+                ContentValues values = new ContentValues();
+                values.put("value", value);
+                int count = db.update(tName+"_link_attribute", values, tName+"_id = ? AND external_source_id = ? AND external_id = ? AND key = ?", new String[] { String.valueOf(itemId), String.valueOf(externalSource.id), externalId, key });
+                if (count == 0) {
+                    values.put(tName+"_id", itemId);
+                    values.put("external_source_id", externalSource.id);
+                    values.put("external_id", externalId);
+                    values.put("key", key);
+                    db.insert(tName+"_link_attribute", null, values);
+                }
+            }
+        }
+
+        @Override
+        public T getItem() {
+            return item;
+        }
+    }
+
+    private abstract class DBLinkStore<T> implements LinkStore<T> {
+        private final String tName;
+
+        DBLinkStore(String tName) {
+            this.tName = tName;
+        }
+
+        protected abstract long itemId(T item);
+
+        protected abstract T item(long itemId);
+
+        @Override
+        public Link<T> getLink(ExternalSource externalSource, String externalId) {
+            Cursor cursor = db.rawQuery("SELECT "+tName+"_id, external_id FROM "+tName+"_link WHERE external_id = ? AND external_source_id = ?", new String[] { externalId, String.valueOf(((DBExternalSource) externalSource).id) });
+            try {
+                if (cursor.moveToNext()) {
+                    return new DBLink<T>(this, (DBExternalSource) externalSource, cursor);
+                }
+                return null;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public Link<T> getLink(T item, ExternalSource externalSource) {
+            Cursor cursor = db.rawQuery("SELECT "+tName+"_id, external_id FROM "+tName+"_link WHERE "+tName+"_id = ? AND external_source_id = ?", new String[] { String.valueOf(itemId(item)), String.valueOf(((DBExternalSource) externalSource).id) });
+            try {
+                if (cursor.moveToNext()) {
+                    return new DBLink<T>(this, (DBExternalSource) externalSource, cursor);
+                }
+                return null;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public Collection<Link<T>> getLinks(T item) {
+            ArrayList<Link<T>> list = new ArrayList<Link<T>>();
+            Cursor cursor = db.rawQuery("SELECT "+tName+"_id, external_id, external_source_id, source_id FROM "+tName+"_link, external_source WHERE "+tName+"_id = ? AND external_source_id = external_source.id", new String[] { String.valueOf(itemId(item)) });
+            try {
+                while (cursor.moveToNext()) {
+                    list.add(new DBLink<T>(this, new DBExternalSource(cursor, 2), cursor));
+                }
+                return list;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public void delete(Link<T> link) {
+            DBLink<T> dbLink = (DBLink<T>) link;
+            db.beginTransaction();
+            try {
+                db.delete(tName + "_link_attribute", tName + "_id = ? AND external_source_id = ? AND external_id = ?", new String[] { String.valueOf(dbLink.itemId), String.valueOf(dbLink.externalSource.id), dbLink.externalId });
+                db.delete(tName + "_link", tName + "_id = ? AND external_source_id = ? AND external_id = ?", new String[] { String.valueOf(dbLink.itemId), String.valueOf(dbLink.externalSource.id), dbLink.externalId });
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+
+        @Override
+        public Link<T> addLink(T item, ExternalSource externalSource, String externalId) {
+            ContentValues values = new ContentValues();
+            values.put(tName+"_id", itemId(item));
+            values.put("external_source_id", ((DBExternalSource) externalSource).id);
+            values.put("external_id", externalId);
+            db.insert(tName+"_link", null, values);
+            return new DBLink<T>(this, (DBExternalSource) externalSource, externalId, itemId(item), item);
+        }
+
+        @Override
+        public ExternalSource getExternalSource(String externalSourceId) {
+            Cursor cursor = db.rawQuery("SELECT id, source_id FROM external_source WHERE source_id = ?", new String[] { externalSourceId });
+            try {
+                if (cursor.moveToNext()) {
+                    return new DBExternalSource(cursor, 0);
+                }
+                return null;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public Collection<ExternalSource> getExternalSources() {
+            ArrayList<ExternalSource> list = new ArrayList<ExternalSource>();
+            Cursor cursor = db.rawQuery("SELECT id, source_id FROM external_source", null);
+            try {
+                while (cursor.moveToNext()) {
+                    list.add(new DBExternalSource(cursor, 0));
+                }
+                return list;
+            } finally {
+                cursor.close();
+            }
+        }
+
+        @Override
+        public void delete(ExternalSource externalSource) {
+            db.beginTransaction();
+            try {
+                db.delete("external_source", "id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.delete("external_source_attribute", "external_source_id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.delete("location_link", "external_source_id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.delete("location_link_attribute", "external_source_id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.delete("route_link", "external_source_id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.delete("route_link_attribute", "external_source_id = ?", new String[] { String.valueOf(((DBExternalSource) externalSource).id) });
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+
+        @Override
+        public ExternalSource addExternalSource(String externalSourceId) {
+            ContentValues values = new ContentValues();
+            values.put("source_id", externalSourceId);
+            return new DBExternalSource(db.insert("external_source", null, values), externalSourceId);
+        }
+    }
+
+    private final DBLinkStore<Location> locationLinkStore = new DBLinkStore<Location>("location") {
+        @Override
+        protected long itemId(Location item) {
+            return ((DBLocation) item).id;
+        }
+
+        @Override
+        protected Location item(long itemId) {
+            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE id = ?", new String[] { String.valueOf(itemId) });
+            try {
+                if (cursor.moveToNext()) {
+                    return new DBLocation(cursor, 0);
+                }
+                return null;
+            } finally {
+                cursor.close();
+            }
+        }
+    };
+
     @Override
     public LinkStore<Location> getLocationLinkStore() {
-        return null;
+        return locationLinkStore;
     }
+
+    private final DBLinkStore<Route> routeLinkStore = new DBLinkStore<Route>("route") {
+        @Override
+        protected long itemId(Route item) {
+            return ((DBRoute) item).id;
+        }
+
+        @Override
+        protected Route item(long itemId) {
+            Cursor cursor = db.rawQuery("SELECT id, name FROM route WHERE id = ?", new String[] { String.valueOf(itemId) });
+            try {
+                if (cursor.moveToNext()) {
+                    return new DBRoute(cursor);
+                }
+                return null;
+            } finally {
+                cursor.close();
+            }
+        }
+    };
 
     @Override
     public LinkStore<Route> getRouteLinkStore() {
-        return null;
+        return routeLinkStore;
     }
 
     private static long insertLocation(SQLiteDatabase db, String name, double latitude, double longitude, double elevation) {
