@@ -66,4 +66,12 @@ public abstract class Widget implements PointProcessor.Listener, PointReceiver, 
 
     public void onNewIntent(Intent intent) {
     }
+
+    protected void showMessage(final String message) {
+        post(new Runnable() {
+            @Override public void run() {
+                activity.notificationWidget.show(message);
+            }
+        });
+    }
 }
