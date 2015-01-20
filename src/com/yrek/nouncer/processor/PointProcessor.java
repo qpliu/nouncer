@@ -74,7 +74,7 @@ public class PointProcessor implements PointReceiver {
     }
 
     private void sendExit(Location proximateLocation, Point point, Point lastPoint) {
-        listener.receiveExit(proximateLocation, extrapolateTime(lastPoint, point, proximateLocation), heading(proximateLocation, point), speed(lastPoint, point), point.getTime());
+        listener.receiveExit(proximateLocation, extrapolateTime(point, lastPoint, proximateLocation), heading(proximateLocation, point), speed(lastPoint, point), point.getTime());
     }
 
     private void sendEntry(Location proximateLocation, Point point, Point lastPoint) {
