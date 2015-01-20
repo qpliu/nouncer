@@ -290,7 +290,7 @@ class RouteWidget extends Widget {
         if (activity.store == null) {
             return;
         }
-        new Thread() {
+        activity.threadPool.execute(new Runnable() {
             @Override public void run() {
                 final ArrayList<TrackEntry> trackEntries = new ArrayList<TrackEntry>();
                 final ArrayList<TrackPoint> points = new ArrayList<TrackPoint>();
@@ -324,6 +324,6 @@ class RouteWidget extends Widget {
                     }
                 });
             }
-        }.start();
+        });
     }
 }

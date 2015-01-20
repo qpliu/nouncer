@@ -1,6 +1,7 @@
 package com.yrek.nouncer;
 
 import java.util.ArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -22,6 +23,7 @@ import com.yrek.nouncer.store.Store;
 public class Main extends Activity {
     private final ArrayList<Widget> widgets = new ArrayList<Widget>();
     private AnnouncerServiceConnection serviceConnection;
+    ScheduledThreadPoolExecutor threadPool;
     AnnouncerService announcerService;
     Store store;
     Announcements announcements;
@@ -45,6 +47,8 @@ public class Main extends Activity {
 
         this.announcements = new Announcements(this);
 
+        this.threadPool = new ScheduledThreadPoolExecutor(2);
+
         this.widgets.clear();
         this.tabsWidget = addWidget(new TabsWidget(this, R.id.tabs_widget));
         this.startStopWidget = addWidget(new StartStopWidget(this, R.id.start_stop_widget));
@@ -59,6 +63,11 @@ public class Main extends Activity {
         this.notificationWidget = addWidget(new NotificationWidget(this, R.id.notification_widget));
         this.stravaWidget = addWidget(new StravaWidget(this, R.id.notification_widget));
         onNewIntent(getIntent());
+    }
+
+    @Override
+    protected void onDestroy() {
+        threadPool.shutdownNow();
     }
 
     @Override
