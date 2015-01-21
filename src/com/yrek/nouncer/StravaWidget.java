@@ -2,6 +2,7 @@ package com.yrek.nouncer;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
@@ -47,7 +48,62 @@ class StravaWidget extends Widget {
                 return;
             }
         }
-        activity.notificationWidget.show("Strava: Not implemented: accessToken=" + accessToken);
+        activity.threadPool.execute(fetchSegments(0));
+    }
+
+    private Runnable fetchSegments(final int page) {
+        return new Runnable() {
+            @Override public void run() {
+                try {
+                    JsonRestClient.request(new URL("https://www.strava.com/api/v3/segments/starred" + (page > 0 ? "?page=" + page : "")), new JsonRestClient.Parameters().add("Authorization", "Bearer " + accessToken), null, new JsonRestClient.ResponseReader() {
+                        @Override public void onError(int responseCode, InputStream err) throws IOException {
+                            if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                activity.store.getLocationLinkStore().getExternalSource(STRAVA).setAttribute(ACCESS_TOKEN, null);
+                                showMessage("Strava: Deauthorized");
+                            } else {
+                                showMessage("Strava segments: HTTP error:" + responseCode);
+                            }
+                        }
+                        @Override public void onResponse(int responseCode, JsonReader reader) throws IOException {
+                            reader.beginArray();
+                            while (reader.hasNext()) {
+                                reader.beginObject();
+                                String id = null;
+                                String name = null;
+                                double startLat = 0.0;
+                                double endLat = 0.0;
+                                double startLng = 0.0;
+                                double endLng = 0.0;
+                                while (reader.hasNext()) {
+                                    String key = reader.nextName();
+                                    if ("id".equals(key)) {
+                                        id = String.valueOf(reader.nextLong());
+                                    } else if ("name".equals(key)) {
+                                        name = reader.nextString();
+                                    } else if ("start_latitude".equals(key)) {
+                                        startLat = reader.nextDouble();
+                                    } else if ("end_latitude".equals(key)) {
+                                        endLat = reader.nextDouble();
+                                    } else if ("start_longitude".equals(key)) {
+                                        startLng = reader.nextDouble();
+                                    } else if ("end_longitude".equals(key)) {
+                                        endLng = reader.nextDouble();
+                                    } else {
+                                        reader.skipValue();
+                                    }
+                                }
+                                reader.endObject();
+                                android.util.Log.d("StravaWidget","segment:id="+id+",name="+name+",start="+startLat+","+startLng+",end="+endLat+","+endLng);
+                            }
+                            reader.endArray();
+                            activity.notificationWidget.show("Strava: Not implemented: accessToken=" + accessToken);
+                        }
+                    });
+                } catch (final IOException e) {
+                    showMessage("Strava segments: IO error:" + e.getMessage());
+                }
+            }
+        };
     }
 
     public void onNewIntent(Intent intent) {
@@ -64,7 +120,7 @@ class StravaWidget extends Widget {
                 try {
                     JsonRestClient.request(new URL("https://www.strava.com/oauth/token"), null, new JsonRestClient.Parameters().add("client_id", clientId).add("client_secret", clientSecret).add("code", code), new JsonRestClient.ResponseReader() {
                         @Override public void onError(int responseCode, InputStream err) throws IOException {
-                            showMessage("Strava: HTTP error:" + responseCode);
+                            showMessage("Strava authorization: HTTP error:" + responseCode);
                         }
                         @Override public void onResponse(int responseCode, JsonReader reader) throws IOException {
                             String accessToken = null;
@@ -87,8 +143,8 @@ class StravaWidget extends Widget {
                             });
                         }
                     });
-                } catch (final IOException e) {
-                    showMessage("Strava: IO error:" + e.getMessage());
+                } catch (IOException e) {
+                    showMessage("Strava authorization: IO error:" + e.getMessage());
                 }
             }
         });
