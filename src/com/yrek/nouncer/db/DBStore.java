@@ -602,10 +602,10 @@ public class DBStore implements Store {
 
         @Override
         public boolean addExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
-            long id = 0L;
-            Cursor cursor = db.rawQuery("SELECT id, location_id FROM track ORDER BY entry_time DESC", null);
+            long id;
+            Cursor cursor = db.rawQuery("SELECT id FROM track WHERE exit_time IS NULL AND location_id = ? AND entry_time > ? ORDER BY entry_time DESC", new String[] { String.valueOf(((DBLocation) location).id), String.valueOf(timestamp - 8*3600*1000) });
             try {
-                if (cursor.moveToNext() && ((DBLocation) location).id == cursor.getLong(1)) {
+                if (cursor.moveToNext()) {
                     id = cursor.getLong(0);
                 } else {
                     id = insertTrackPoint(db, ((DBLocation) location).id, exitTime, exitHeading, exitSpeed, timestamp);

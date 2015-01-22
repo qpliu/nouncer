@@ -1,5 +1,9 @@
 package com.yrek.nouncer.processor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+
 import com.yrek.nouncer.data.Location;
 import com.yrek.nouncer.data.Point;
 
@@ -12,13 +16,9 @@ public class PointProcessor implements PointReceiver {
     // exitRadius must be greater than entryRadius
     private final double exitRadius;
 
-    // Does not handle locations nearer than exitRadius of each other.
-    // Supporting closer locations would take something more complicated,
-    // should the need arise.
-    private Location proximateLocation = null;
-    private boolean entered = false;
+    private final HashSet<Location> entered = new HashSet<Location>();
+    private final ArrayList<Event> events = new ArrayList<Event>();
     private Point lastPoint = null;
-    private double lastDistance = 0.0;
 
     public PointProcessor(LocationStore locationStore, Listener listener) {
         this.locationStore = locationStore;
@@ -29,74 +29,74 @@ public class PointProcessor implements PointReceiver {
 
     @Override
     public void receivePoint(Point point) {
-        if (lastPoint != null && point.getTime() - lastPoint.getTime() < 1000L) {
+        assert events.isEmpty();
+        if (lastPoint == null) {
+            assert entered.isEmpty();
+            for (Location l : locationStore.getLocations(point.getLatitude(), point.getLongitude(), exitRadius)) {
+                if (distance(point, l) < entryRadius) {
+                    entered.add(l);
+                    listener.receiveEntry(l, point.getTime(), heading(point, l), 0.0, point.getTime());
+                }
+            }
+            lastPoint = point;
             return;
         }
-        if (proximateLocation != null) {
-            double d = distance(point, proximateLocation);
-            if (d >= exitRadius) {
-                if (lastDistance < exitRadius && entered) {
-                    sendExit(proximateLocation, point, lastPoint);
-                }
-                proximateLocation = null;
-                entered = false;
-            } else {
-                if (d < entryRadius && lastDistance >= entryRadius && !entered) {
-                    entered = true;
-                    sendEntry(proximateLocation, point, lastPoint);
-                }
-                lastPoint = point;
-                lastDistance = d;
-                return;
+        if (point.getTime() - lastPoint.getTime() < 1000L) {
+            return;
+        }
+        for (Location l : entered) {
+            if (distance(point, l) >= exitRadius) {
+                events.add(new Event(l, extrapolateTime(point, lastPoint, l), false));
             }
         }
-        lastDistance = exitRadius;
         for (Location l : locationStore.getLocations(point.getLatitude(), point.getLongitude(), exitRadius)) {
-            double d = distance(point, l);
-            if (d < lastDistance) {
-                lastDistance = d;
-                proximateLocation = l;
+            if (!entered.contains(l) && distance(point, l) < entryRadius) {
+                events.add(new Event(l, extrapolateTime(lastPoint, point, l), true));
             }
         }
-        if (lastDistance < entryRadius) {
-            if (lastPoint == null && !entered) {
-                entered = true;
-                sendEntry(proximateLocation, point, null);
-            } else {
-                double d = distance(lastPoint, proximateLocation);
-                if (d > lastDistance && !entered) {
-                    entered = true;
-                    sendEntry(proximateLocation, point, lastPoint);
+        Collections.sort(events);
+        for (Event e : events) {
+            if (e.entry) {
+                entered.add(e.location);
+                double heading;
+                if (e.time > point.getTime()) {
+                    heading = heading(point, e.location);
+                } else if (e.time < point.getTime()) {
+                    heading = heading(e.location, point);
+                } else {
+                    heading = heading(lastPoint, point);
                 }
+                listener.receiveEntry(e.location, e.time, heading, speed(lastPoint, point), point.getTime());
+            } else {
+                entered.remove(e.location);
+                listener.receiveExit(e.location, e.time, heading(e.location, point), speed(lastPoint, point), point.getTime());
             }
         }
+        events.clear();
         lastPoint = point;
     }
 
-    private void sendExit(Location proximateLocation, Point point, Point lastPoint) {
-        listener.receiveExit(proximateLocation, extrapolateTime(point, lastPoint, proximateLocation), heading(proximateLocation, point), speed(lastPoint, point), point.getTime());
-    }
+    private static class Event implements Comparable<Event> {
+        final Location location;
+        final long time;
+        final boolean entry;
 
-    private void sendEntry(Location proximateLocation, Point point, Point lastPoint) {
-        long time;
-        double heading;
-        double speed;
-        if (lastPoint == null) {
-            time = point.getTime();
-            heading = heading(point, proximateLocation);
-            speed = 0.0;
-        } else {
-            time = extrapolateTime(lastPoint, point, proximateLocation);
-            if (time > point.getTime()) {
-                heading = heading(point, proximateLocation);
-            } else if (time < point.getTime()) {
-                heading = heading(proximateLocation, point);
-            } else {
-                heading = heading(lastPoint, point);
-            }
-            speed = speed(lastPoint, point);
+        Event(Location location, long time, boolean entry) {
+            this.location = location;
+            this.time = time;
+            this.entry = entry;
         }
-        listener.receiveEntry(proximateLocation, time, heading, speed, point.getTime());
+
+        @Override
+        public int compareTo(Event e) {
+            if (e.time == time) {
+                if (e.entry == entry) {
+                    return 0;
+                }
+                return entry ? 1 : -1;
+            }
+            return e.time < time ? 1 : -1;
+        }
     }
 
     public interface Listener {
