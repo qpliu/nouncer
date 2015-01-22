@@ -101,10 +101,15 @@ public class DBStore implements Store {
 
         @Override
         public Collection<Location> getLocations(double latitude, double longitude, double radius, boolean includeHidden) {
-            ArrayList<Location> list = new ArrayList<Location>();
             double dlat = PointProcessor.dlat(radius);
             double dlon = PointProcessor.dlon(latitude, radius);
-            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE " + (includeHidden ? "" : "hidden = 0 AND ") + "latitude >= ? AND latitude <= ? AND ((longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?))", new String[] { String.valueOf(latitude - dlat),  String.valueOf(latitude + dlat), String.valueOf(longitude - dlon), String.valueOf(longitude + dlon), String.valueOf(longitude - dlon + 180.0), String.valueOf(longitude + dlon + 180.0), String.valueOf(longitude - dlon - 180.0), String.valueOf(longitude + dlon - 180.0) });
+            return getLocations(latitude-dlat, latitude+dlat, longitude-dlon, longitude+dlon, includeHidden);
+        }
+
+        @Override
+        public Collection<Location> getLocations(double minLatitude, double maxLatitude, double minLongitude, double maxLongitude, boolean includeHidden) {
+            ArrayList<Location> list = new ArrayList<Location>();
+            Cursor cursor = db.rawQuery("SELECT id, name, latitude, longitude, elevation FROM location WHERE " + (includeHidden ? "" : "hidden = 0 AND ") + "latitude >= ? AND latitude <= ? AND ((longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?) OR (longitude >= ? AND longitude <= ?))", new String[] { String.valueOf(minLatitude), String.valueOf(maxLatitude), String.valueOf(minLongitude), String.valueOf(maxLongitude), String.valueOf(minLongitude + 180.0), String.valueOf(maxLongitude + 180.0), String.valueOf(minLongitude - 180.0), String.valueOf(maxLongitude - 180.0) });
             try {
                 while (cursor.moveToNext()) {
                     list.add(new DBLocation(cursor, 0));
