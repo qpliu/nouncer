@@ -56,4 +56,9 @@
      android:id="@+id/add_location_widget"
      android:visibility="gone"
      />
+  <include
+     layout="@layout/strava_widget"
+     android:id="@+id/strava_widget"
+     android:visibility="gone"
+     />
 </LinearLayout>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+   xmlns:android="http://schemas.android.com/apk/res/android"
+   android:layout_width="fill_parent"
+   android:layout_height="fill_parent"
+   >
+  <ProgressBar
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_centerInParent="true"
+     android:id="@+id/progress_bar"
+     android:indeterminate="true"
+     />
+  <Button
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_alignParentTop="true"
+     android:id="@+id/refresh_button"
+     android:text="Refresh"
+     />
+  <ListView
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent"
+     android:id="@+id/segment_list"
+     android:layout_below="@id/refresh_button"
+     />
+</RelativeLayout>

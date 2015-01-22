@@ -56,6 +56,7 @@ class RouteWidget extends Widget {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         activity.store.getRouteStore().delete(route);
                         activity.show(activity.tabsWidget, activity.routeListWidget);
+                        activity.stravaWidget.invalidateCache();
                     }
                 }).create().show();
             }

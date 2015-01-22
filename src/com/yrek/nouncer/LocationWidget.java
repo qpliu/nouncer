@@ -41,6 +41,7 @@ class LocationWidget extends Widget {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         activity.store.getLocationStore().delete(location);
                         activity.show(activity.tabsWidget, activity.locationListWidget);
+                        activity.stravaWidget.invalidateCache();
                     }
                 }).create().show();
             }

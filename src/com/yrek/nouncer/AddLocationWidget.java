@@ -88,7 +88,7 @@ class AddLocationWidget extends Widget {
         view.findViewById(R.id.latitude).setEnabled(false);
         ((TextView) view.findViewById(R.id.longitude)).setText(String.valueOf(longitude));
         view.findViewById(R.id.longitude).setEnabled(false);
-        ((TextView) view.findViewById(R.id.elevation)).setText(String.valueOf(elevation));
+        ((TextView) view.findViewById(R.id.elevation)).setText(String.valueOf(elevation*3.28084));
         view.findViewById(R.id.elevation).setEnabled(false);
     }
 }

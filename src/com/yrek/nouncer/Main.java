@@ -61,7 +61,7 @@ public class Main extends Activity {
         this.locationWidget = addWidget(new LocationWidget(this, R.id.location_widget));
         this.addLocationWidget = addWidget(new AddLocationWidget(this, R.id.add_location_widget));
         this.notificationWidget = addWidget(new NotificationWidget(this, R.id.notification_widget));
-        this.stravaWidget = addWidget(new StravaWidget(this, R.id.notification_widget));
+        this.stravaWidget = addWidget(new StravaWidget(this, R.id.strava_widget));
         onNewIntent(getIntent());
     }
 
