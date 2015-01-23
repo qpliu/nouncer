@@ -223,8 +223,6 @@ class StravaWidget extends Widget {
         final double endLng;
         final double dist;
         final double avgGrade;
-        final double startElev;
-        final double endElev;
         Link<Location> startLink;
         Link<Location> endLink;
         Link<Route> routeLink;
@@ -241,17 +239,6 @@ class StravaWidget extends Widget {
             this.startLink = null;
             this.endLink = null;
             this.routeLink = null;
-            final double[] elev = new double[2];
-            UsgsNed.queryElevation(startLat, startLng, new UsgsNed.Receiver() {
-                @Override public void onError() {}
-                @Override public void onResult(double el) { elev[0] = el; }
-            }).run();
-            UsgsNed.queryElevation(endLat, endLng, new UsgsNed.Receiver() {
-                @Override public void onError() {}
-                @Override public void onResult(double el) { elev[1] = el; }
-            }).run();
-            this.startElev = elev[0];
-            this.endElev = elev[1];
         }
 
         void render(View v) {
@@ -273,7 +260,7 @@ class StravaWidget extends Widget {
             } else {
                 v.findViewById(R.id.start_name_text).setVisibility(View.GONE);
                 v.findViewById(R.id.add_start_button).setVisibility(View.VISIBLE);
-                v.findViewById(R.id.add_start_button).setOnClickListener(addLocationOnClick("Start of "+name, "s"+id, startLat, startLng, startElev, true));
+                v.findViewById(R.id.add_start_button).setOnClickListener(addLocationOnClick("Start of "+name, "s"+id, startLat, startLng, true));
             }
             if (endLink != null) {
                 v.findViewById(R.id.end_name_text).setVisibility(View.VISIBLE);
@@ -283,7 +270,7 @@ class StravaWidget extends Widget {
             } else {
                 v.findViewById(R.id.end_name_text).setVisibility(View.GONE);
                 v.findViewById(R.id.add_end_button).setVisibility(View.VISIBLE);
-                v.findViewById(R.id.add_end_button).setOnClickListener(addLocationOnClick("End of "+name, "e"+id, endLat, endLng, endElev, false));
+                v.findViewById(R.id.add_end_button).setOnClickListener(addLocationOnClick("End of "+name, "e"+id, endLat, endLng, false));
             }
             if (routeLink != null) {
                 v.findViewById(R.id.route_name_text).setVisibility(View.VISIBLE);
@@ -305,9 +292,10 @@ class StravaWidget extends Widget {
             };
         }
 
-        private View.OnClickListener addLocationOnClick(final String addName, final String addId, final double lat, final double lng, final double elev, final boolean isStart) {
-            return new View.OnClickListener() {
-                @Override public void onClick(View v) {
+        private View.OnClickListener addLocationOnClick(final String addName, final String addId, final double lat, final double lng, final boolean isStart) {
+            final double[] elev = new double[] { -1000000 };
+            final Runnable showAddLocation = new Runnable() {
+                @Override public void run() {
                     activity.addLocationWidget.show(new AddLocationWidget.OnFinish() {
                         @Override public void onFinish(final Location location) {
                             if (location != null) {
@@ -320,7 +308,22 @@ class StravaWidget extends Widget {
                             }
                             enter();
                         }
-                    }, addName, lat, lng, elev);
+                    }, addName, lat, lng, elev[0]);
+                }
+            };
+            final Runnable getElevation = UsgsNed.queryElevation(startLat, startLng, new UsgsNed.Receiver() {
+                @Override public void onError() {
+                    post(showAddLocation);
+                }
+                @Override public void onResult(double el) {
+                    elev[0] = el;
+                    post(showAddLocation);
+                }
+            });
+            return new View.OnClickListener() {
+                @Override public void onClick(View v) {
+                    showProgressBar.run();
+                    activity.threadPool.execute(getElevation);
                 }
             };
         }
