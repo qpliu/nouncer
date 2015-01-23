@@ -11,6 +11,11 @@ class TabsWidget extends Widget {
         view.findViewById(R.id.strava_button).setOnClickListener(onClickListener);
     }
 
+    @Override
+    public void onShow() {
+        view.findViewById(R.id.strava_button).setVisibility(activity.stravaWidget.available() ? View.VISIBLE : View.GONE);
+    }
+
     private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {

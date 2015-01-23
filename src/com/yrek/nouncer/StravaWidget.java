@@ -40,8 +40,8 @@ class StravaWidget extends Widget {
 
     StravaWidget(final Main activity, int id) {
         super(activity, id);
-        clientId = activity.getString(R.string.strava_client_id);
-        clientSecret = activity.getString(R.string.strava_client_secret);
+        clientId = getResourceString(activity, "strava_client_id");
+        clientSecret = getResourceString(activity, "strava_client_secret");
         segmentAdapter = new ArrayAdapter<Segment>(activity, R.layout.strava_segment_list_entry) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -61,6 +61,21 @@ class StravaWidget extends Widget {
                 refreshSegments();
             }
         });
+    }
+
+    private static String getResourceString(Context context, String name) {
+        try {
+            String s = context.getString(R.string.class.getDeclaredField(name).getInt(null));
+            return s.trim().length() > 0 ? s : null;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchFieldException e) {
+        }
+        return null;
+    }
+
+    boolean available() {
+        return (clientId != null && clientSecret != null) || accessToken != null;
     }
 
     @Override
