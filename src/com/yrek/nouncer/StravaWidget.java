@@ -274,7 +274,7 @@ class StravaWidget extends Widget {
             }
             if (routeLink != null) {
                 v.findViewById(R.id.route_name_text).setVisibility(View.VISIBLE);
-                ((TextView) v.findViewById(R.id.route_name_text)).setText(endLink.getItem().getName());
+                ((TextView) v.findViewById(R.id.route_name_text)).setText(routeLink.getItem().getName());
                 v.findViewById(R.id.route_name_text).setOnClickListener(showRouteOnClick);
                 v.findViewById(R.id.add_route_button).setVisibility(View.GONE);
             } else {
