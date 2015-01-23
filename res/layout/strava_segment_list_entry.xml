@@ -24,7 +24,7 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/add_start_button"
-       android:text="Add"
+       android:text="Add Location"
        />
     <TextView
        android:layout_width="wrap_content"
@@ -46,12 +46,34 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/add_end_button"
-       android:text="Add"
+       android:text="Add Location"
        />
     <TextView
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/end_name_text"
+       />
+  </LinearLayout>
+  <LinearLayout
+     android:orientation="horizontal"
+     android:layout_width="fill_parent"
+     android:layout_height="wrap_content"
+     >
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="Route:"
+       />
+    <Button
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/add_route_button"
+       android:text="Add Route"
+       />
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/route_name_text"
        />
   </LinearLayout>
 </LinearLayout>

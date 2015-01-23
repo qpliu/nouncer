@@ -20,8 +20,11 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.yrek.nouncer.data.Location;
+import com.yrek.nouncer.data.Route;
 import com.yrek.nouncer.external.ExternalSource;
 import com.yrek.nouncer.external.Link;
+import com.yrek.nouncer.processor.PointProcessor;
+import com.yrek.nouncer.processor.PolylineDecoder;
 import com.yrek.nouncer.rest.JsonRestClient;
 
 class StravaWidget extends Widget {
@@ -154,7 +157,6 @@ class StravaWidget extends Widget {
                                 double startLng = 0.0;
                                 double dist = 0.0;
                                 double avgGrade = 0.0;
-                                String polyline = null;
                                 while (reader.hasNext()) {
                                     String key = reader.nextName();
                                     if ("id".equals(key)) {
@@ -173,24 +175,13 @@ class StravaWidget extends Widget {
                                         dist = reader.nextDouble();
                                     } else if ("average_grade".equals(key)) {
                                         avgGrade = reader.nextDouble();
-                                    } else if ("map".equals(key)) {
-                                        reader.beginObject();
-                                        while (reader.hasNext()) {
-                                            key = reader.nextName();
-                                            if ("polyline".equals(key)) {
-                                                polyline = reader.nextString();
-                                            } else {
-                                                reader.skipValue();
-                                            }
-                                        }
-                                        reader.endObject();
                                     } else {
                                         reader.skipValue();
                                     }
                                 }
                                 reader.endObject();
                                 synchronized (segments) {
-                                    segments.add(new Segment(id, name, startLat, startLng, endLat, endLng, dist, avgGrade, polyline));
+                                    segments.add(new Segment(id, name, startLat, startLng, endLat, endLng, dist, avgGrade));
                                 }
                             }
                             reader.endArray();
@@ -219,11 +210,11 @@ class StravaWidget extends Widget {
         final double avgGrade;
         final double startElev;
         final double endElev;
-        final String polyline;
         Link<Location> startLink;
         Link<Location> endLink;
+        Link<Route> routeLink;
 
-        Segment(String id, String name, double startLat, double startLng, double endLat, double endLng, double dist, double avgGrade, String polyline) {
+        Segment(String id, String name, double startLat, double startLng, double endLat, double endLng, double dist, double avgGrade) {
             this.id = id;
             this.name = name;
             this.startLat = startLat;
@@ -232,9 +223,9 @@ class StravaWidget extends Widget {
             this.endLng = endLng;
             this.dist = dist;
             this.avgGrade = avgGrade;
-            this.polyline = polyline;
             this.startLink = null;
             this.endLink = null;
+            this.routeLink = null;
             final double[] elev = new double[2];
             UsgsNed.queryElevation(startLat, startLng, new UsgsNed.Receiver() {
                 @Override public void onError() {}
@@ -254,6 +245,9 @@ class StravaWidget extends Widget {
             }
             if (endLink == null) {
                 endLink = activity.store.getLocationLinkStore().getLink(stravaSource, "e" + id);
+            }
+            if (routeLink == null) {
+                routeLink = activity.store.getRouteLinkStore().getLink(stravaSource, id);
             }
             ((TextView) v.findViewById(R.id.name)).setText(String.format("%s (%.1fmi %.1f%%)", name, dist*0.000621371, avgGrade));
             if (startLink != null) {
@@ -275,6 +269,16 @@ class StravaWidget extends Widget {
                 v.findViewById(R.id.end_name_text).setVisibility(View.GONE);
                 v.findViewById(R.id.add_end_button).setVisibility(View.VISIBLE);
                 v.findViewById(R.id.add_end_button).setOnClickListener(addLocationOnClick("End of "+name, "e"+id, endLat, endLng, endElev, false));
+            }
+            if (routeLink != null) {
+                v.findViewById(R.id.route_name_text).setVisibility(View.VISIBLE);
+                ((TextView) v.findViewById(R.id.route_name_text)).setText(endLink.getItem().getName());
+                v.findViewById(R.id.route_name_text).setOnClickListener(showRouteOnClick);
+                v.findViewById(R.id.add_route_button).setVisibility(View.GONE);
+            } else {
+                v.findViewById(R.id.route_name_text).setVisibility(View.GONE);
+                v.findViewById(R.id.add_route_button).setVisibility(View.VISIBLE);
+                v.findViewById(R.id.add_route_button).setOnClickListener(addRouteOnClick);
             }
         }
 
@@ -306,9 +310,100 @@ class StravaWidget extends Widget {
             };
         }
 
+        private final View.OnClickListener showRouteOnClick = new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                activity.routeWidget.show(routeLink.getItem());
+            }
+        };
+
+        private final View.OnClickListener addRouteOnClick = new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                showProgressBar.run();
+                activity.threadPool.execute(prepareAddRoute);
+            }
+        };
+
+        private final Runnable prepareAddRoute = new Runnable() {
+            @Override public void run() {
+                try {
+                    JsonRestClient.request(new URL("https://www.strava.com/api/v3/segments/" + id), new JsonRestClient.Parameters().add("Authorization", "Bearer " + accessToken), null, new JsonRestClient.ResponseReader() {
+                        @Override public void onError(int responseCode, InputStream err) throws IOException {
+                            post(showSegmentList);
+                            if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                stravaSource.setAttribute(ACCESS_TOKEN, null);
+                                showMessage("Strava: Deauthorized");
+                            } else {
+                                showMessage("Strava segment: HTTP error:" + responseCode);
+                            }
+                        }
+                        @Override public void onResponse(int responseCode, JsonReader reader) throws IOException {
+                            String polyline = null;
+                            reader.beginObject();
+                            while (reader.hasNext()) {
+                                String key = reader.nextName();
+                                if ("map".equals(key)) {
+                                    reader.beginObject();
+                                    while (reader.hasNext()) {
+                                        key = reader.nextName();
+                                        if ("polyline".equals(key)) {
+                                            polyline = reader.nextString();
+                                        } else {
+                                            reader.skipValue();
+                                        }
+                                    }
+                                    reader.endObject();
+                                } else {
+                                    reader.skipValue();
+                                }
+                            }
+                            reader.endObject();
+                            post(addRoute(polyline));
+                        }
+                    });
+                } catch (final IOException e) {
+                    post(showSegmentList);
+                    showMessage("Strava segment: IO error:" + e.getMessage());
+                }
+            }
+        };
+
+        private ArrayList<Location> getPolylineLocations(String polyline) {
+            final ArrayList<Location> locations = new ArrayList<Location>();
+            new PolylineDecoder(new PointProcessor(activity.store.getLocationStore(), new PointProcessor.Listener() {
+                @Override public void receiveEntry(Location location, long entryTime, double entryHeading, double entrySpeed, long timestamp) {
+                    locations.add(location);
+                }
+                @Override public void receiveExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
+                }
+            })).process(polyline);
+            return locations;
+        }
+
+        private Runnable addRoute(final String polyline) {
+            final ArrayList<Location> locations = getPolylineLocations(polyline);
+            return new Runnable() {
+                @Override public void run() {
+                    activity.addRouteWidget.show(onAddRouteFinish(polyline), name, locations);
+                }
+            };
+        }
+
+        private AddRouteWidget.OnFinish onAddRouteFinish(final String polyline) {
+            return new AddRouteWidget.OnFinish() {
+                @Override public void onFinish(Route route) {
+                    if (route != null) {
+                        routeLink = activity.store.getRouteLinkStore().addLink(route, stravaSource, id);
+                        routeLink.setAttribute("polyline", polyline);
+                    }
+                    enter();
+                }
+            };
+        }
+
         void invalidateCache() {
             startLink = null;
             endLink = null;
+            routeLink = null;
         }
     }
 
