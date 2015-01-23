@@ -45,4 +45,21 @@
      android:id="@+id/cancel_button"
      android:text="Cancel"
      />
+  <LinearLayout
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent"
+     android:orientation="vertical"
+     android:id="@+id/nearby_locations"
+     >
+    <TextView
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:text="Nearby locations:"
+       />
+    <ListView
+       android:layout_width="fill_parent"
+       android:layout_height="fill_parent"
+       android:id="@+id/nearby_location_list"
+       />
+  </LinearLayout>
 </LinearLayout>
