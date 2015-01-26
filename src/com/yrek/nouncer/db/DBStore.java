@@ -162,7 +162,7 @@ public class DBStore implements Store {
 
     private class DBLocation implements Location {
         private final long id;
-        private final String name;
+        private String name;
         private final double latitude;
         private final double longitude;
         private final double elevation;
@@ -178,6 +178,14 @@ public class DBStore implements Store {
         @Override 
         public String getName() {
             return name;
+        }
+
+        @Override 
+        public void setName(String name) {
+            this.name = name;
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            db.update("location", values, "id = ?", new String[] { String.valueOf(id) });
         }
 
         @Override 
@@ -347,7 +355,7 @@ public class DBStore implements Store {
 
     private class DBRoute implements Route {
         private final long id;
-        private final String name;
+        private String name;
         private final ArrayList<DBRoutePoint> routePoints;
 
         DBRoute(Cursor cursor) {
@@ -376,6 +384,14 @@ public class DBStore implements Store {
         @Override
         public String getName() {
             return name;
+        }
+
+        @Override 
+        public void setName(String name) {
+            this.name = name;
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            db.update("route", values, "id = ?", new String[] { String.valueOf(id) });
         }
 
         @Override
