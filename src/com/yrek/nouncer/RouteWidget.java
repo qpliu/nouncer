@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -59,6 +60,11 @@ class RouteWidget extends Widget {
                         activity.stravaWidget.invalidateCache();
                     }
                 }).create().show();
+            }
+        });
+        TextChanger.setup((TextView) view.findViewById(R.id.name), (EditText) view.findViewById(R.id.edit_name), new TextChanger.OnTextChanged() {
+            @Override public void onTextChanged(String text) {
+                route.setName(text);
             }
         });
     }
@@ -282,6 +288,8 @@ class RouteWidget extends Widget {
     public void show(final Route route) {
         activity.show(activity.tabsWidget, this);
         this.route = route;
+        view.findViewById(R.id.name).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.edit_name).setVisibility(View.GONE);
         ((TextView) view.findViewById(R.id.name)).setText(route.getName());
         routePointAdapter.clear();
         for (RoutePoint routePoint : route.getRoutePoints()) {

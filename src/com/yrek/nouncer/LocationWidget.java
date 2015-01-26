@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -46,6 +47,11 @@ class LocationWidget extends Widget {
                 }).create().show();
             }
         });
+        TextChanger.setup((TextView) view.findViewById(R.id.name), (EditText) view.findViewById(R.id.edit_name), new TextChanger.OnTextChanged() {
+            @Override public void onTextChanged(String text) {
+                location.setName(text);
+            }
+        });
     }
 
     private void renderEntry(View view, Route item) {
@@ -63,6 +69,8 @@ class LocationWidget extends Widget {
     public void show(Location location) {
         this.location = location;
         activity.show(activity.tabsWidget, this);
+        view.findViewById(R.id.name).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.edit_name).setVisibility(View.GONE);
         ((TextView) view.findViewById(R.id.name)).setText(location.getName());
         ((TextView) view.findViewById(R.id.latitude)).setText(String.valueOf(location.getLatitude()));
         ((TextView) view.findViewById(R.id.longitude)).setText(String.valueOf(location.getLongitude()));

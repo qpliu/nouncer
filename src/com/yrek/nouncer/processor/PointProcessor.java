@@ -21,10 +21,14 @@ public class PointProcessor implements PointReceiver {
     private Point lastPoint = null;
 
     public PointProcessor(LocationStore locationStore, Listener listener) {
+        this(locationStore, listener, 30.0, 40.0);
+    }
+
+    public PointProcessor(LocationStore locationStore, Listener listener, double entryRadius, double exitRadius) {
         this.locationStore = locationStore;
         this.listener = listener;
-        this.entryRadius = 30.0;
-        this.exitRadius = 40.0;
+        this.entryRadius = entryRadius;
+        this.exitRadius = exitRadius;
     }
 
     @Override

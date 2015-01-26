@@ -393,7 +393,7 @@ class StravaWidget extends Widget {
                 }
                 @Override public void receiveExit(Location location, long exitTime, double exitHeading, double exitSpeed, long timestamp) {
                 }
-            })).process(polyline);
+            }, 75.0, 80.0)).process(polyline);
             return locations;
         }
 
