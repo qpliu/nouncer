@@ -32,6 +32,7 @@ class StravaWidget extends Widget {
     private static final String ACCESS_TOKEN = "access_token";
     private final String clientId;
     private final String clientSecret;
+    private final String oauthCodeProxy;
     private final ArrayList<Segment> segments = new ArrayList<Segment>();
     private final ArrayAdapter<Segment> segmentAdapter;
     private ExternalSource stravaSource;
@@ -42,6 +43,7 @@ class StravaWidget extends Widget {
         super(activity, id);
         clientId = getResourceString(activity, "strava_client_id");
         clientSecret = getResourceString(activity, "strava_client_secret");
+        oauthCodeProxy = getResourceString(activity, "strava_client_oauth_code_proxy");
         segmentAdapter = new ArrayAdapter<Segment>(activity, R.layout.strava_segment_list_entry) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -75,7 +77,7 @@ class StravaWidget extends Widget {
     }
 
     boolean available() {
-        return (clientId != null && clientSecret != null) || accessToken != null;
+        return (clientId != null && (clientSecret != null || oauthCodeProxy != null)) || accessToken != null;
     }
 
     @Override
@@ -437,7 +439,15 @@ class StravaWidget extends Widget {
         activity.threadPool.execute(new Runnable() {
             @Override public void run() {
                 try {
-                    JsonRestClient.request(new URL("https://www.strava.com/oauth/token"), null, new JsonRestClient.Parameters().add("client_id", clientId).add("client_secret", clientSecret).add("code", code), new JsonRestClient.ResponseReader() {
+                    URL url;
+                    JsonRestClient.Parameters parameters = new JsonRestClient.Parameters().add("client_id", clientId).add("code", code);
+                    if (clientSecret != null) {
+                        url = new URL("https://www.strava.com/oauth/token");
+                        parameters.add("client_secret", clientSecret);
+                    } else {
+                        url = new URL(oauthCodeProxy);
+                    }
+                    JsonRestClient.request(url, null, parameters, new JsonRestClient.ResponseReader() {
                         @Override public void onError(int responseCode, InputStream err) throws IOException {
                             showMessage("Strava authorization: HTTP error:" + responseCode);
                         }
