@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -15,6 +16,8 @@ import android.net.Uri;
 import android.util.JsonReader;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
@@ -104,12 +107,6 @@ class StravaWidget extends Widget {
     }
 
     private void refreshSegments() {
-        synchronized (segments) {
-            if (fetching) {
-                return;
-            }
-            fetching = true;
-        }
         NetworkInfo networkInfo = ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         if (networkInfo == null || !networkInfo.isConnected()) {
             activity.notificationWidget.show("Strava: No network connection");
@@ -118,9 +115,15 @@ class StravaWidget extends Widget {
         if (accessToken == null) {
             accessToken = stravaSource.getAttributes().get(ACCESS_TOKEN);
             if (accessToken == null) {
-                activity.startActivity(new Intent(Intent.ACTION_VIEW, new Uri.Builder().scheme("https").authority("www.strava.com").path("/oauth/authorize").appendQueryParameter("client_id", clientId).appendQueryParameter("response_type", "code").appendQueryParameter("redirect_uri", new Uri.Builder().scheme("nouncer").authority("localhost").path("/strava").toString()).build()));
+                showAuthorizationDialog();
                 return;
             }
+        }
+        synchronized (segments) {
+            if (fetching) {
+                return;
+            }
+            fetching = true;
         }
         activity.threadPool.execute(fetchSegments(0));
         showProgressBar.run();
@@ -427,56 +430,66 @@ class StravaWidget extends Widget {
         }
     }
 
-    public void onNewIntent(Intent intent) {
-        if (!"/strava".equals(intent.getData().getPath())) {
-            return;
-        }
-        List<String> codeParameter = intent.getData().getQueryParameters("code");
-        if (codeParameter == null || codeParameter.size() != 1) {
-            return;
-        }
-        final String code = codeParameter.get(0);
-        activity.threadPool.execute(new Runnable() {
-            @Override public void run() {
-                try {
-                    URL url;
-                    JsonRestClient.Parameters parameters = new JsonRestClient.Parameters().add("client_id", clientId).add("code", code);
-                    if (clientSecret != null) {
-                        url = new URL("https://www.strava.com/oauth/token");
-                        parameters.add("client_secret", clientSecret);
-                    } else {
-                        url = new URL(oauthCodeProxy);
-                    }
-                    JsonRestClient.request(url, null, parameters, new JsonRestClient.ResponseReader() {
-                        @Override public void onError(int responseCode, InputStream err) throws IOException {
-                            showMessage("Strava authorization: HTTP error:" + responseCode);
-                        }
-                        @Override public void onResponse(int responseCode, JsonReader reader) throws IOException {
-                            String accessToken = null;
-                            reader.beginObject();
-                            while (reader.hasNext()) {
-                                String name = reader.nextName();
-                                if ("access_token".equals(name)) {
-                                    accessToken = reader.nextString();
-                                } else {
-                                    reader.skipValue();
-                                }
+    private void showAuthorizationDialog() {
+        final WebView webView = new WebView(activity) {
+            @Override public boolean onCheckIsTextEditor() {
+                return true;
+            }
+        };
+        final AlertDialog dialog = new AlertDialog.Builder(activity).setView(webView).setNegativeButton("Cancel", null).create();
+        webView.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView v, String url) {
+                final String code = Uri.parse(url).getQueryParameter("code");
+                if (code == null) {
+                    return false;
+                }
+                dialog.dismiss();
+                activity.threadPool.execute(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            URL url;
+                            JsonRestClient.Parameters parameters = new JsonRestClient.Parameters().add("client_id", clientId).add("code", code);
+                            if (clientSecret != null) {
+                                url = new URL("https://www.strava.com/oauth/token");
+                                parameters.add("client_secret", clientSecret);
+                            } else {
+                                url = new URL(oauthCodeProxy);
                             }
-                            reader.endObject();
-                            stravaSource.setAttribute(ACCESS_TOKEN, accessToken);
-                            StravaWidget.this.accessToken = accessToken;
-                            post(new Runnable() {
-                                @Override public void run() {
-                                    enter();
+                            JsonRestClient.request(url, null, parameters, new JsonRestClient.ResponseReader() {
+                                @Override public void onError(int responseCode, InputStream err) throws IOException {
+                                    showMessage("Strava authorization: HTTP error:" + responseCode);
+                                }
+                                @Override public void onResponse(int responseCode, JsonReader reader) throws IOException {
+                                    String accessToken = null;
+                                    reader.beginObject();
+                                    while (reader.hasNext()) {
+                                        String name = reader.nextName();
+                                        if ("access_token".equals(name)) {
+                                            accessToken = reader.nextString();
+                                        } else {
+                                            reader.skipValue();
+                                        }
+                                    }
+                                    reader.endObject();
+                                    stravaSource.setAttribute(ACCESS_TOKEN, accessToken);
+                                    StravaWidget.this.accessToken = accessToken;
+                                    post(new Runnable() {
+                                        @Override public void run() {
+                                            enter();
+                                        }
+                                    });
                                 }
                             });
+                        } catch (IOException e) {
+                            showMessage("Strava authorization: IO error:" + e.getMessage());
                         }
-                    });
-                } catch (IOException e) {
-                    showMessage("Strava authorization: IO error:" + e.getMessage());
-                }
+                    }
+                });
+                return true;
             }
         });
+        webView.loadUrl(new Uri.Builder().scheme("https").authority("www.strava.com").path("/oauth/authorize").appendQueryParameter("client_id", clientId).appendQueryParameter("response_type", "code").appendQueryParameter("redirect_uri", new Uri.Builder().scheme("nouncer").authority("localhost").path("/strava").toString()).build().toString());
+        dialog.show();
     }
 
     public void invalidateCache() {
