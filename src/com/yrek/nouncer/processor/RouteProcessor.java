@@ -54,7 +54,7 @@ public class RouteProcessor implements PointProcessor.Listener {
                             p.lastExitTime = trackPoint.getExitTime();
                             break;
                         }
-                        if (availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, trackPoint.getEntryTime())) {
+                        if ((availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, trackPoint.getEntryTime())) && !p.route.getRoutePoint(p.index + 1).isMarginal()) {
                             i.remove();
                             break;
                         }
@@ -81,7 +81,7 @@ public class RouteProcessor implements PointProcessor.Listener {
                             p.lastExitTime = timestamp;
                             break;
                         }
-                        if (availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, timestamp)) {
+                        if ((availabilityStore == null || !availabilityStore.wasUnavailable(p.lastExitTime, timestamp)) && !p.route.getRoutePoint(p.index + 1).isMarginal()) {
                             i.remove();
                             break;
                         }

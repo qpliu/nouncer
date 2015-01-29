@@ -6,4 +6,6 @@ public interface RoutePoint {
     public String getExitAnnouncement();
     public void setEntryAnnouncement(String entryAnnouncement);
     public void setExitAnnouncement(String exitAnnouncement);
+    public boolean isMarginal();
+    public void setMarginal(boolean marginal);
 }

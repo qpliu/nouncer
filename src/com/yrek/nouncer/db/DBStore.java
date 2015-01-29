@@ -50,7 +50,7 @@ public class DBStore implements Store {
                 db.execSQL("CREATE INDEX location_longitude ON location (longitude)");
 
                 db.execSQL("CREATE TABLE route (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, starred INTEGER NOT NULL DEFAULT 0)");
-                db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, PRIMARY KEY (route_id, route_index))");
+                db.execSQL("CREATE TABLE route_point (route_id INTEGER REFERENCES route (id), location_id INTEGER REFERENCES location (id), route_index INTEGER, entry_announcement TEXT, exit_announcement TEXT, marginal INTEGER DEFAULT 0, PRIMARY KEY (route_id, route_index))");
 
                 db.execSQL("CREATE TABLE track (id INTEGER PRIMARY KEY AUTOINCREMENT, location_id INTEGER REFERENCES location (id), entry_time INTEGER NOT NULL, exit_time INTEGER, entry_heading FLOAT NOT NULL, exit_heading FLOAT, entry_speed FLOAT NOT NULL, exit_speed FLOAT, entry_timestamp INTEGER NOT NULL, exit_timestamp INTEGER)");
                 db.execSQL("CREATE INDEX track_entry_time ON track (entry_time)");
@@ -523,6 +523,23 @@ public class DBStore implements Store {
         public void setExitAnnouncement(String exitAnnouncement) {
             ContentValues values = new ContentValues();
             values.put("exit_announcement", exitAnnouncement);
+            db.update("route_point", values, "route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
+        }
+
+        @Override
+        public boolean isMarginal() {
+            Cursor c = db.rawQuery("SELECT marginal FROM route_point WHERE route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
+            try {
+                return c.moveToNext() && !c.isNull(0) && c.getInt(0) != 0;
+            } finally {
+                c.close();
+            }
+        }
+
+        @Override
+        public void setMarginal(boolean marginal) {
+            ContentValues values = new ContentValues();
+            values.put("marginal", marginal ? 1 : 0);
             db.update("route_point", values, "route_id = ? AND route_index = ?", new String[] { String.valueOf(routeId), String.valueOf(routeIndex) });
         }
     }
