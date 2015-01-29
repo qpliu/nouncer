@@ -31,4 +31,18 @@
      android:id="@+id/announcement_spinner"
      android:visibility="gone"
      />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/marginal_label"
+     android:text="Marginal:"
+     android:visibility="gone"
+     />
+  <CheckBox
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:id="@+id/marginal_checkbox"
+     android:focusable="false"
+     android:visibility="gone"
+     />
 </LinearLayout>

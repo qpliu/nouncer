@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -77,27 +78,48 @@ class RouteWidget extends Widget {
         private final RoutePoint routePoint;
         private final boolean entryAnnouncement;
         private final boolean exitAnnouncement;
+        private final boolean marginalCheckbox;
 
-        RoutePointEntry(RoutePoint routePoint, boolean entryAnnouncement, boolean exitAnnouncement) {
+        RoutePointEntry(RoutePoint routePoint, boolean entryAnnouncement, boolean exitAnnouncement, boolean marginalCheckbox) {
             this.routePoint = routePoint;
             this.entryAnnouncement = entryAnnouncement;
             this.exitAnnouncement = exitAnnouncement;
+            this.marginalCheckbox = marginalCheckbox;
         }
 
-        boolean isAnnouncement() {
-            return entryAnnouncement || exitAnnouncement;
+        boolean isName() {
+            return !entryAnnouncement && !exitAnnouncement && !marginalCheckbox;
         }
 
         void display(View view) {
-            if (!entryAnnouncement && !exitAnnouncement) {
+            if (!entryAnnouncement && !exitAnnouncement && !marginalCheckbox) {
                 view.findViewById(R.id.name).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.entry_label).setVisibility(View.GONE);
                 view.findViewById(R.id.exit_label).setVisibility(View.GONE);
                 view.findViewById(R.id.announcement_spinner).setVisibility(View.GONE);
+                view.findViewById(R.id.marginal_label).setVisibility(View.GONE);
+                view.findViewById(R.id.marginal_checkbox).setVisibility(View.GONE);
                 ((TextView) view.findViewById(R.id.name)).setText(routePoint.getLocation().getName());
                 return;
             }
             view.findViewById(R.id.name).setVisibility(View.GONE);
+            if (marginalCheckbox) {
+                view.findViewById(R.id.entry_label).setVisibility(View.GONE);
+                view.findViewById(R.id.exit_label).setVisibility(View.GONE);
+                view.findViewById(R.id.announcement_spinner).setVisibility(View.GONE);
+                view.findViewById(R.id.marginal_label).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.marginal_checkbox).setVisibility(View.VISIBLE);
+                final CheckBox checkBox = (CheckBox) view.findViewById(R.id.marginal_checkbox);
+                checkBox.setChecked(routePoint.isMarginal());
+                checkBox.setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        routePoint.setMarginal(checkBox.isChecked());
+                    }
+                });
+                return;
+            }
+            view.findViewById(R.id.marginal_label).setVisibility(View.GONE);
+            view.findViewById(R.id.marginal_checkbox).setVisibility(View.GONE);
             if (entryAnnouncement) {
                 view.findViewById(R.id.entry_label).setVisibility(View.VISIBLE);
                 view.findViewById(R.id.exit_label).setVisibility(View.GONE);
@@ -193,15 +215,16 @@ class RouteWidget extends Widget {
     private final AdapterView.OnItemClickListener routePointEntryClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            while (position > 0 && routePointAdapter.getItem(position).isAnnouncement()) {
+            while (position > 0 && !routePointAdapter.getItem(position).isName()) {
                 position--;
             }
             RoutePointEntry item = routePointAdapter.getItem(position);
-            if (position + 1 >= routePointAdapter.getCount() || !routePointAdapter.getItem(position + 1).isAnnouncement()) {
-                routePointAdapter.insert(new RoutePointEntry(item.routePoint, true, false), position + 1);
-                routePointAdapter.insert(new RoutePointEntry(item.routePoint, false, true), position + 2);
+            if (position + 1 >= routePointAdapter.getCount() || routePointAdapter.getItem(position + 1).isName()) {
+                routePointAdapter.insert(new RoutePointEntry(item.routePoint, true, false, false), position + 1);
+                routePointAdapter.insert(new RoutePointEntry(item.routePoint, false, true, false), position + 2);
+                routePointAdapter.insert(new RoutePointEntry(item.routePoint, false, false, true), position + 3);
             } else {
-                while (position + 1 < routePointAdapter.getCount() && routePointAdapter.getItem(position + 1).isAnnouncement()) {
+                while (position + 1 < routePointAdapter.getCount() && !routePointAdapter.getItem(position + 1).isName()) {
                     routePointAdapter.remove(routePointAdapter.getItem(position + 1));
                 }
             }
@@ -293,7 +316,7 @@ class RouteWidget extends Widget {
         ((TextView) view.findViewById(R.id.name)).setText(route.getName());
         routePointAdapter.clear();
         for (RoutePoint routePoint : route.getRoutePoints()) {
-            routePointAdapter.add(new RoutePointEntry(routePoint, false, false));
+            routePointAdapter.add(new RoutePointEntry(routePoint, false, false, false));
         }
         trackAdapter.clear();
         if (activity.store == null) {
