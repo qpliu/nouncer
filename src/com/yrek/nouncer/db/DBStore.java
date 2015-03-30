@@ -571,6 +571,11 @@ public class DBStore implements Store {
             }
             return true;
         }
+
+        @Override
+        public void deleteOlderThan(long timestamp) {
+            db.delete("point", "time < ?", new String[] { String.valueOf(timestamp) });
+        }
     };
 
     private class DBPoint implements Point {
@@ -648,6 +653,11 @@ public class DBStore implements Store {
             }
             updateTrackPoint(db, id, exitTime, exitHeading, exitSpeed, timestamp);
             return true;
+        }
+
+        @Override
+        public void deleteOlderThan(long timestamp) {
+            db.delete("track", "entry_timestamp < ?", new String[] { String.valueOf(timestamp) });
         }
     };
 
