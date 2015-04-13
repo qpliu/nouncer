@@ -739,6 +739,11 @@ public class DBStore implements Store {
             values.put("unavailable_end_time", endTime);
             db.insert("availability", null, values);
         }
+
+        @Override
+        public void deleteOlderThan(long timestamp) {
+            db.delete("availability", "unavailable_start_time < ?", new String[] { String.valueOf(timestamp) });
+        }
     };
 
     @Override

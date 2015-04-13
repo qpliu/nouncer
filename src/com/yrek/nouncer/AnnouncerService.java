@@ -137,6 +137,13 @@ public class AnnouncerService extends Service {
             announcer.stop();
             announcer = null;
         }
+        Store store = this.store;
+        if (store != null) {
+            long timestamp90DaysAgo = System.currentTimeMillis() - 90L*86400L*1000L;
+            store.getPointStore().deleteOlderThan(timestamp90DaysAgo);
+            store.getTrackStore().deleteOlderThan(timestamp90DaysAgo);
+            store.getAvailabilityStore().deleteOlderThan(timestamp90DaysAgo);
+        }
         stopSelf();
     }
 
